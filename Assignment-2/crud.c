@@ -7,7 +7,6 @@
 #define MAX_NAME_LEN 50
 #define MAX_LINE_LEN 256
 
-// structure for user data
 typedef struct
 {
     int id;
@@ -15,7 +14,6 @@ typedef struct
     int age;
 } User;
 
-// Get the next available unique ID
 int getNextId()
 {
     FILE *file = fopen(FILENAME, "r");
@@ -108,7 +106,6 @@ void readUsers()
     printf("| %-4s | %-20s | %-4s |\n", "ID", "Name", "Age");
     printf("---------------------------------------\n");
 
-    // Reading 3 items (ID, Name, Age) at a time
     while (fscanf(file, "%d %s %d\n", &user.id, user.name, &user.age) == 3)
     {
         printf("| %-4d | %-20s | %-4d |\n", user.id, user.name, user.age);
@@ -166,7 +163,6 @@ void updateUser()
         return;
     }
 
-    // Temporary file to store the updated data
     FILE *temp = fopen("temp.txt", "w");
     if (temp == NULL)
     {
@@ -178,7 +174,6 @@ void updateUser()
     User user;
     int found = 0;
 
-    // Read from original, write to temp file
     while (fscanf(original, "%d %s %d\n", &user.id, user.name, &user.age) == 3)
     {
         if (user.id == targetID)
@@ -198,14 +193,13 @@ void updateUser()
 
     if (found)
     {
-        // Replac original file with temporary file
         remove(FILENAME);
         rename("temp.txt", FILENAME);
         printf("User ID %d updated successfully.\n", targetID);
     }
     else
     {
-        remove("temp.txt"); // Clean up temp file
+        remove("temp.txt");
         printf("Error: User with ID %d not found.\n", targetID);
     }
 }
@@ -300,7 +294,7 @@ int main()
                 ;
             continue;
         }
-        // Consume the newline left by scanf
+        // Consume \n left by scanf
         int c;
         while ((c = getchar()) != '\n' && c != EOF)
             ;
