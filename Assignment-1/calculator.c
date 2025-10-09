@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-int is_operator(const char *token)
+int isOperator(const char *token)
 {
     if (token == NULL || strlen(token) != 1)
     {
@@ -13,7 +13,7 @@ int is_operator(const char *token)
     return strchr(operators, *token) != NULL;
 }
 
-int is_number(const char *token)
+int isNumber(const char *token)
 {
     if (token == NULL || *token == '\0')
     {
@@ -71,14 +71,14 @@ bool calculate(char *expr)
 {
     trim(expr);
     char *tokens[128];
-    int token_count = -1;
+    int tokenCount = -1;
 
     // strtok to get the first token
     char *token = strtok(expr, " ");
 
     while (token != NULL)
     {
-        tokens[++token_count] = token; // Store token pointer
+        tokens[++tokenCount] = token; // Store token pointer
         token = strtok(NULL, " ");
     }
 
@@ -92,8 +92,8 @@ bool calculate(char *expr)
     } ElementType;
     typedef union
     {
-        int integer_val;
-        char char_val;
+        int integerVal;
+        char charVal;
     } ElementData;
     typedef struct
     {
@@ -101,47 +101,47 @@ bool calculate(char *expr)
         ElementData data;
     } ArrayElement;
 
-    ArrayElement outputstr[96];
-    char operatorstack[32];
-    int oper_inx = -1, output_inx = 0;
-    for (int i = 0; i <= token_count; i++)
+    ArrayElement outputStr[96];
+    char operatorStack[32];
+    int operatorInx = -1, outputInx = 0;
+    for (int i = 0; i <= tokenCount; i++)
     {
-        if (is_operator(tokens[i]))
+        if (isOperator(tokens[i]))
         {
-            char curr_op = *tokens[i];
-            if (i == 0 || is_operator(tokens[i - 1]) || i == token_count || is_operator(tokens[i + 1]))
+            char currOperator = *tokens[i];
+            if (i == 0 || isOperator(tokens[i - 1]) || i == tokenCount || isOperator(tokens[i + 1]))
             {
                 printf("Error: Invalid Expression");
                 return 0;
             }
-            while (oper_inx > -1 && precedence(operatorstack[oper_inx]) >= precedence(curr_op))
+            while (operatorInx > -1 && precedence(operatorStack[operatorInx]) >= precedence(currOperator))
             {
-                outputstr[output_inx].type = TYPE_CHAR;
-                outputstr[output_inx++].data.char_val = operatorstack[oper_inx]; // storing first char of the operator string
+                outputStr[outputInx].type = TYPE_CHAR;
+                outputStr[outputInx++].data.charVal = operatorStack[operatorInx]; // storing first char of the operator string
                 // pop operator from stack;
-                operatorstack[oper_inx--] = '\0';
+                operatorStack[operatorInx--] = '\0';
             }
-            operatorstack[++oper_inx] = *tokens[i];
+            operatorStack[++operatorInx] = *tokens[i];
         }
-        else if (is_number(tokens[i])) // put number in output directly
+        else if (isNumber(tokens[i])) // put number in output directly
         {
-            if (i == 0 && token_count > 0 && !is_operator(tokens[i + 1]))
+            if (i == 0 && tokenCount > 0 && !isOperator(tokens[i + 1]))
             {
                 printf("Error: Invalid Expression");
                 return 0;
             }
-            else if (i == token_count && !is_operator(tokens[i - 1]))
+            else if (i == tokenCount && !isOperator(tokens[i - 1]))
             {
                 printf("Error: Invalid Expression");
                 return 0;
             }
-            else if (!is_operator(tokens[i - 1]) || !is_operator(tokens[i + 1]))
+            else if (!isOperator(tokens[i - 1]) || !isOperator(tokens[i + 1]))
             {
                 printf("Error: Invalid Expression");
                 return 0;
             }
-            outputstr[output_inx].type = TYPE_INT;
-            outputstr[output_inx++].data.integer_val = atoi(tokens[i]);
+            outputStr[outputInx].type = TYPE_INT;
+            outputStr[outputInx++].data.integerVal = atoi(tokens[i]);
         }
         else
         {
@@ -151,50 +151,50 @@ bool calculate(char *expr)
         // printf("Token: %s\n", tokens[i]);
     }
     // Push remaining operators from operator stack to output
-    while (oper_inx > -1)
+    while (operatorInx > -1)
     {
-        outputstr[output_inx].type = TYPE_CHAR;
-        outputstr[output_inx++].data.char_val = operatorstack[oper_inx--];
+        outputStr[outputInx].type = TYPE_CHAR;
+        outputStr[outputInx++].data.charVal = operatorStack[operatorInx--];
     }
 
     // final result
-    int result[64], result_inx = -1;
-    for (int i = 0; i < output_inx; i++)
+    int result[64], resultInx = -1;
+    for (int i = 0; i < outputInx; i++)
     {
-        if (outputstr[i].type == TYPE_INT)
+        if (outputStr[i].type == TYPE_INT)
         {
-            result[++result_inx] = outputstr[i].data.integer_val;
+            result[++resultInx] = outputStr[i].data.integerVal;
         }
         else
         {
-            int right = result[result_inx];
-            result[result_inx--] = NULL;
-            int left = result[result_inx];
-            result[result_inx--] = NULL;
-            if (outputstr[i].data.char_val == '+')
+            int right = result[resultInx];
+            result[resultInx--] = NULL;
+            int left = result[resultInx];
+            result[resultInx--] = NULL;
+            if (outputStr[i].data.charVal == '+')
             {
-                result[++result_inx] = left + right;
+                result[++resultInx] = left + right;
             }
-            else if (outputstr[i].data.char_val == '-')
+            else if (outputStr[i].data.charVal == '-')
             {
-                result[++result_inx] = left - right;
+                result[++resultInx] = left - right;
             }
-            else if (outputstr[i].data.char_val == '*')
+            else if (outputStr[i].data.charVal == '*')
             {
-                result[++result_inx] = left * right;
+                result[++resultInx] = left * right;
             }
-            else if (outputstr[i].data.char_val == '/')
+            else if (outputStr[i].data.charVal == '/')
             {
                 if (right == 0)
                 {
                     printf("Error: Division by zero");
                     return 0;
                 }
-                result[++result_inx] = left / right;
+                result[++resultInx] = left / right;
             }
         }
     }
-    printf("Result: %d", result[result_inx]);
+    printf("Result: %d", result[resultInx]);
     return 1;
 }
 
