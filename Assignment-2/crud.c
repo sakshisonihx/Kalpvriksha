@@ -15,7 +15,7 @@ typedef struct
 } User;
 
 int getNextId();
-void get_safe_input(char *, int);
+void getSafeInput(char *, int);
 void createUser();
 void readUser();
 void updateUser();
@@ -35,7 +35,8 @@ int main()
             while ((clearBuffer = getchar()) != '\n' && clearBuffer != EOF);
             continue;
         }
-
+        int clearBuffer;
+        while ((clearBuffer = getchar()) != '\n' && clearBuffer != EOF);
         switch (choice)
         {
         case 1:
@@ -85,7 +86,7 @@ int getNextId()
 }
 
 // Replacing \n with \0 in input
-void get_safe_input(char *buffer, int size)
+void getSafeInput(char *buffer, int size)
 {
     if (fgets(buffer, size, stdin) != NULL)
     {
@@ -110,7 +111,7 @@ void createUser()
     printf("Generated ID: %d\n", newUser.id);
 
     printf("Enter name (max %d chars): ", MAX_NAME_LEN - 1);
-    get_safe_input(newUser.name, MAX_NAME_LEN);
+    getSafeInput(newUser.name, MAX_NAME_LEN);
 
     printf("Enter age: ");
     // check for invalid input
@@ -181,7 +182,7 @@ void updateUser()
     while ((clearBuffer = getchar()) != '\n' && clearBuffer != EOF);
 
     printf("Enter new name: ");
-    get_safe_input(newName, MAX_NAME_LEN);
+    getSafeInput(newName, MAX_NAME_LEN);
 
     printf("Enter new age: ");
     if (scanf("%d", &newAge) != 1)
