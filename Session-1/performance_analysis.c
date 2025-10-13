@@ -10,6 +10,56 @@ typedef struct
     int marksOfSubject3;
 } StudentDetails;
 
+int calculateTotal(StudentDetails);
+char calculateGrade(float);
+void printPerformance(float);
+void printRollNo(const StudentDetails* , int, int);
+int compareRollNo(const void*, const void*);
+
+int main()
+{
+    int numberOfStudents;
+    printf("\nEnter the input in following format\n\n");
+    printf("First line: An integer N (number of students)\nNext N lines: (Each line contains the following data separated by spaces)\nRoll_Number Name Marks1 Marks2 Marks3\n\n");
+    scanf("%d", &numberOfStudents);
+
+    StudentDetails *studentArray = (StudentDetails *)malloc(numberOfStudents * sizeof(StudentDetails));
+    for (int i = 0; i < numberOfStudents; i++)
+    {
+        // storing number of items successfully matched and assigned (must be 5)
+        int match = scanf("%d %49s %d %d %d", &studentArray[i].rollNo, studentArray[i].name, &studentArray[i].marksOfSubject1, &studentArray[i].marksOfSubject2, &studentArray[i].marksOfSubject3);
+        if (match != 5)
+        {
+            fprintf(stderr, "\nERROR: Invalid input format detected for Student %d.\n", i + 1);
+            return 1;
+        }
+    }
+
+    for (int i = 0; i < numberOfStudents; i++)
+    {
+        int total = calculateTotal(studentArray[i]);
+        float average = (float)total / 3;
+        char grade = calculateGrade(average);
+        printf("\nRoll: %d\nName: %s\nTotal: %d\nAverage: %.2f\nGrade: %c\n", studentArray[i].rollNo, studentArray[i].name, total, average, grade);
+        if (average < 35)
+        {
+            continue;
+        }
+        printf("Performance: ");
+        printPerformance(average);
+    }
+
+    // sorting array by roll number
+    qsort(studentArray, numberOfStudents, sizeof(StudentDetails), compareRollNo);
+
+    printf("List of Roll Numbers(via recursion): ");
+    printRollNo(studentArray, numberOfStudents, 0);
+
+    studentArray = NULL;
+    free(studentArray);
+    return 0;
+}
+
 int calculateTotal(StudentDetails student)
 {
     return student.marksOfSubject1 + student.marksOfSubject2 + student.marksOfSubject3;
@@ -59,10 +109,10 @@ void printPerformance(float average)
     }
 }
 
-void printRollNo(const StudentDetails *listOfStudents, int N, int index)
+void printRollNo(const StudentDetails *listOfStudents, int numberOfStudents, int index)
 {
     // print \n after all roll numbers
-    if (index >= N)
+    if (index >= numberOfStudents)
     {
         printf("\n");
         return;
@@ -70,14 +120,13 @@ void printRollNo(const StudentDetails *listOfStudents, int N, int index)
     printf("%d", listOfStudents[index].rollNo);
 
     // print space if not on last index
-    if (index < N - 1)
+    if (index < numberOfStudents - 1)
     {
         printf(" ");
     }
-    printRollNo(listOfStudents, N, index + 1);
+    printRollNo(listOfStudents, numberOfStudents, index + 1);
 }
 
-// comparator function for qsort
 int compareRollNo(const void *a, const void *b)
 {
     StudentDetails *studentA = (StudentDetails *)a;
@@ -85,48 +134,4 @@ int compareRollNo(const void *a, const void *b)
 
     // positive value if studentA->rollNo > studentB->rollNo
     return studentA->rollNo - studentB->rollNo;
-}
-
-int main()
-{
-    int N;
-    printf("\nEnter the input in following format\n\n");
-    printf("First line: An integer N (number of students)\nNext N lines: (Each line contains the following data separated by spaces)\nRoll_Number Name Marks1 Marks2 Marks3\n\n");
-    scanf("%d", &N);
-
-    StudentDetails *studentArray = (StudentDetails *)malloc(N * sizeof(StudentDetails));
-    for (int i = 0; i < N; i++)
-    {
-        // storing number of items successfully matched and assigned (must be 5)
-        int match = scanf("%d %49s %d %d %d", &studentArray[i].rollNo, studentArray[i].name, &studentArray[i].marksOfSubject1, &studentArray[i].marksOfSubject2, &studentArray[i].marksOfSubject3);
-        if (match != 5) // invalid input
-        {
-            fprintf(stderr, "\nERROR: Invalid input format detected for Student %d.\n", i + 1);
-            return 1;
-        }
-    }
-
-    for (int i = 0; i < N; i++)
-    {
-        int total = calculateTotal(studentArray[i]);
-        float average = (float)total / 3;
-        char grade = calculateGrade(average);
-        printf("\nRoll: %d\nName: %s\nTotal: %d\nAverage: %.2f\nGrade: %c\n", studentArray[i].rollNo, studentArray[i].name, total, average, grade);
-        if (average < 35)
-        {
-            continue;
-        }
-        printf("Performance: ");
-        printPerformance(average);
-    }
-
-    // sorting array by roll number
-    qsort(studentArray, N, sizeof(StudentDetails), compareRollNo);
-
-    printf("List of Roll Numbers(via recursion): ");
-    printRollNo(studentArray, N, 0);
-
-    free(studentArray);
-    studentArray = NULL;
-    return 0;
 }
