@@ -10,7 +10,12 @@ int main()
 {
     int matrixSize;
     printf("Enter matrix size (2-10): ");
-    scanf("%d", &matrixSize);
+    int inputCheck = scanf("%d", &matrixSize);
+    if (inputCheck != 1)
+    {
+        printf("Invalid size input");
+        return 1;
+    }
 
     int **sonarIntensity = (int **)malloc(matrixSize * sizeof(int *));
     for (int i = 0; i < matrixSize; i++)
