@@ -11,16 +11,16 @@ int main()
     int matrixSize;
     printf("Enter matrix size (2-10): ");
     int inputCheck = scanf("%d", &matrixSize);
-    if (inputCheck != 1)
+    if (inputCheck != 1 || matrixSize < 2 || matrixSize > 10)
     {
         printf("Invalid size input");
         return 1;
     }
 
     int **sonarIntensity = (int **)malloc(matrixSize * sizeof(int *));
-    for (int i = 0; i < matrixSize; i++)
+    for (int row = 0; row < matrixSize; row++)
     {
-        sonarIntensity[i] = (int *)malloc(matrixSize * sizeof(int));
+        sonarIntensity[row] = (int *)malloc(matrixSize * sizeof(int));
     }
     // updating seed for rand() so that a random matrix is generated everytime
     srand(time(NULL));
@@ -45,9 +45,9 @@ int main()
     printf("\nMatrix after Applying 3x3 Smoothing Filter:\n");
     printMatrix(sonarIntensity, matrixSize);
 
-    for (int i = 0; i < matrixSize; i++)
+    for (int row = 0; row < matrixSize; row++)
     {
-        free(sonarIntensity[i]);
+        free(sonarIntensity[row]);
     }
     free(sonarIntensity);
     return 0;
@@ -59,7 +59,7 @@ void printMatrix(int **matrix, int size)
     {
         for (int columnIndex = 0; columnIndex < size; columnIndex++)
         {
-            printf("%d ", *(*(matrix + rowIndex) + columnIndex));
+            printf("%d\t", *(*(matrix + rowIndex) + columnIndex));
         }
         printf("\n");
     }
