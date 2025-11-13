@@ -334,7 +334,46 @@ void addPlayerToTeam()
     printf("\nPlayer added successfully to Team %s!", foundTeam->teamData.teamName);
 }
 
-void displayPlayersOfTeam() {}
+void displayPlayersOfTeam()
+{
+    int id;
+    printf("\nEnter Team ID: ");
+    scanf("%d", &id);
+    TeamNode *foundTeam;
+    foundTeam = findTeam(teamListHead, teamListTail, id);
+    if (foundTeam == NULL)
+    {
+        printf("\nTeam with id %d not found.", id);
+        return;
+    }
+
+    printf("\n");
+    for (int i = 0; i < 130; i++)
+    {
+        printf("%c", '=');
+    }
+    printf("\n%-4s %-25s %-15s %-10s %-15s %-15s %-10s %-15s %-15s", "ID", "Name", "Role", "Runs", "Batting Avg", "Strike Rate", "Wickets", "Economy Rate", "Perf. Index");
+    printf("\n");
+    for (int i = 0; i < 130; i++)
+    {
+        printf("%c", '=');
+    }
+    PlayerNode *temp = foundTeam->teamData.headPointerToPlayers;
+    while (temp != NULL)
+    {
+        printf("\n%-4d %-25s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", temp->playerData.playerId, temp->playerData.playerName, temp->playerData.role, temp->playerData.totalRuns, temp->playerData.battingAverage, temp->playerData.strikeRate, temp->playerData.wickets, temp->playerData.economyRate, temp->playerData.performanceIndex);
+        temp = temp->next;
+    }
+    printf("\n");
+    for (int i = 0; i < 130; i++)
+    {
+        printf("%c", '=');
+    }
+    printf("\n\nTotal Players: %d", foundTeam->teamData.totalPlayers);
+    printf("\nAverage Batting Strike Rate: %.2f", foundTeam->teamData.averageBattingStrikeRate);
+    printf("\nTotal Batting Strike Rate: %.2f", foundTeam->teamData.strikeRateSum);
+    printf("\n");
+}
 
 void displayTeamsByStrikeRate() {}
 
