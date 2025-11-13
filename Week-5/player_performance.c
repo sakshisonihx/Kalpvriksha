@@ -4,6 +4,7 @@
 #include <string.h>
 
 #define NAME_LENGTH 51
+#define PLAYERS_PER_TEAM 50
 
 typedef struct
 {
@@ -19,20 +20,25 @@ typedef struct
     float performanceIndex;
 } PlayerDetails;
 
-typedef struct
-{
-    int teamId;
-    const char *teamName;
-    int totalPlayers;
-    float averageBattingStrikeRate;
-} TeamDetails;
-
 typedef struct PlayerNode
 {
     PlayerDetails playerData;
     struct PlayerNode *next;
     struct PlayerNode *previous;
 } PlayerNode;
+
+typedef struct
+{
+    int teamId;
+    const char *teamName;
+    int totalPlayers;
+    float averageBattingStrikeRate;
+    // helper fields
+    float strikeRateSum;
+    int totalStrikers;
+    PlayerNode *headPointerToPlayers;
+    PlayerNode *tailPointerToPlayers;
+} TeamDetails;
 
 typedef struct TeamNode
 {
@@ -41,12 +47,10 @@ typedef struct TeamNode
     struct TeamNode *previous;
 } TeamNode;
 
-static PlayerNode *playerListHead = NULL;
-static PlayerNode *playerListTail = NULL;
 static TeamNode *teamListHead = NULL;
 static TeamNode *teamListTail = NULL;
 
-void initializePlayers();
+PlayerNode *initializePlayer(Player);
 void initializeTeams();
 void displayMenu();
 void addPlayerToTeam();
@@ -57,62 +61,10 @@ void displayPlayersByRole();
 
 int main()
 {
-    initializePlayers();
     initializeTeams();
     printf("\n%d %d", teamListHead->teamData.teamId, teamListTail->teamData.teamId);
-    printf("\n%d %d", playerListHead->playerData.playerId, playerListTail->playerData.playerId);
     displayMenu();
     return 0;
-}
-
-// initializing players list
-void initializePlayers()
-{
-    for (int currentInx = 0; currentInx < playerCount; currentInx++)
-    {
-        PlayerNode *newPlayer = (PlayerNode *)malloc(sizeof(PlayerNode));
-        if (newPlayer == NULL)
-        {
-            printf("\nMemory allocation failed.");
-            exit(1);
-        }
-
-        newPlayer->next = NULL;
-        newPlayer->playerData.playerId = players[currentInx].id;
-        newPlayer->playerData.playerName = players[currentInx].name;
-        newPlayer->playerData.teamName = players[currentInx].team;
-        newPlayer->playerData.role = players[currentInx].role;
-        newPlayer->playerData.totalRuns = players[currentInx].totalRuns;
-        newPlayer->playerData.battingAverage = players[currentInx].battingAverage;
-        newPlayer->playerData.strikeRate = players[currentInx].strikeRate;
-        newPlayer->playerData.wickets = players[currentInx].wickets;
-        newPlayer->playerData.economyRate = players[currentInx].economyRate;
-        if (strcmp(players[currentInx].role, "Batsman") == 0)
-        {
-            newPlayer->playerData.performanceIndex = (players[currentInx].battingAverage * players[currentInx].strikeRate) / 100;
-        }
-        else if (strcmp(players[currentInx].role, "Bowler") == 0)
-        {
-            newPlayer->playerData.performanceIndex = (players[currentInx].wickets * 2) + (100 - players[currentInx].economyRate);
-        }
-        else if (strcmp(players[currentInx].role, "All-rounder") == 0)
-        {
-            newPlayer->playerData.performanceIndex = ((players[currentInx].battingAverage * players[currentInx].strikeRate) / 100) + (players[currentInx].wickets * 2);
-        }
-
-        if (playerListHead == NULL)
-        {
-            newPlayer->previous = NULL;
-            playerListHead = newPlayer;
-            playerListTail = newPlayer;
-        }
-        else
-        {
-            newPlayer->previous = playerListTail;
-            playerListTail->next = newPlayer;
-            playerListTail = newPlayer;
-        }
-    }
 }
 
 // initializing teams list
@@ -130,10 +82,14 @@ void initializeTeams()
         newTeam->next = NULL;
         newTeam->teamData.teamId = currentInx + 1;
         newTeam->teamData.teamName = teams[currentInx];
+        newTeam->teamData.headPointerToPlayers = NULL;
+        newTeam->teamData.tailPointerToPlayers = NULL;
+
         int count = 0, strikerCount = 0;
         float strikeTotal = 0;
         for (int currentPlayer = 0; currentPlayer < playerCount; currentPlayer++)
         {
+            // member of the team
             if (strcmp(teams[currentInx], players[currentPlayer].team) == 0)
             {
                 count++;
@@ -143,9 +99,24 @@ void initializeTeams()
                     strikerCount++;
                     strikeTotal += players[currentPlayer].strikeRate;
                 }
+
+                PlayerNode *newPlayer = initializePlayer(players[currentPlayer]);
+                if (newTeam->teamData.headPointerToPlayers == NULL)
+                {
+                    newTeam->teamData.headPointerToPlayers = newPlayer;
+                    newTeam->teamData.tailPointerToPlayers = newPlayer;
+                }
+                else
+                {
+                    newPlayer->previous = newTeam->teamData.tailPointerToPlayers;
+                    newTeam->teamData.tailPointerToPlayers->next = newPlayer;
+                    newTeam->teamData.tailPointerToPlayers = newPlayer;
+                }
             }
         }
         newTeam->teamData.totalPlayers = count;
+        newTeam->teamData.strikeRateSum = strikeTotal;
+        newTeam->teamData.totalStrikers = strikerCount;
         newTeam->teamData.averageBattingStrikeRate = strikeTotal / strikerCount;
 
         if (teamListHead == NULL)
@@ -161,6 +132,42 @@ void initializeTeams()
             teamListTail = newTeam;
         }
     }
+}
+
+// initializing players
+PlayerNode *initializePlayer(Player currentPlayer)
+{
+    PlayerNode *newPlayer = (PlayerNode *)malloc(sizeof(PlayerNode));
+    if (newPlayer == NULL)
+    {
+        printf("\nMemory allocation failed.");
+        exit(1);
+    }
+
+    newPlayer->next = NULL;
+    newPlayer->previous = NULL;
+    newPlayer->playerData.playerId = currentPlayer.id;
+    newPlayer->playerData.playerName = currentPlayer.name;
+    newPlayer->playerData.teamName = currentPlayer.team;
+    newPlayer->playerData.role = currentPlayer.role;
+    newPlayer->playerData.totalRuns = currentPlayer.totalRuns;
+    newPlayer->playerData.battingAverage = currentPlayer.battingAverage;
+    newPlayer->playerData.strikeRate = currentPlayer.strikeRate;
+    newPlayer->playerData.wickets = currentPlayer.wickets;
+    newPlayer->playerData.economyRate = currentPlayer.economyRate;
+    if (strcmp(currentPlayer.role, "Batsman") == 0)
+    {
+        newPlayer->playerData.performanceIndex = (currentPlayer.battingAverage * currentPlayer.strikeRate) / 100;
+    }
+    else if (strcmp(currentPlayer.role, "Bowler") == 0)
+    {
+        newPlayer->playerData.performanceIndex = (currentPlayer.wickets * 2) + (100 - currentPlayer.economyRate);
+    }
+    else if (strcmp(currentPlayer.role, "All-rounder") == 0)
+    {
+        newPlayer->playerData.performanceIndex = ((currentPlayer.battingAverage * currentPlayer.strikeRate) / 100) + (currentPlayer.wickets * 2);
+    }
+    return newPlayer;
 }
 
 void displayMenu()
@@ -219,14 +226,14 @@ TeamNode *findMid(TeamNode *start, TeamNode *end)
     return first;
 }
 
-const char *findTeamName(TeamNode *head, TeamNode *tail, int id)
+TeamNode *findTeam(TeamNode *head, TeamNode *tail, int id)
 {
     while (head != tail->next)
     {
         TeamNode *mid = findMid(head, tail);
         if (mid->teamData.teamId == id)
         {
-            return mid->teamData.teamName;
+            return mid;
         }
         else if (mid->teamData.teamId > id)
         {
@@ -237,7 +244,7 @@ const char *findTeamName(TeamNode *head, TeamNode *tail, int id)
             head = mid->next;
         }
     }
-    return "";
+    return NULL;
 }
 
 void addPlayerToTeam()
@@ -252,14 +259,15 @@ void addPlayerToTeam()
     int id;
     printf("\nEnter Team ID to add player: ");
     scanf("%d", &id);
-    const char *team;
-    team = findTeamName(teamListHead, teamListTail, id);
-    if (strcmp(team, "") == 0)
+    TeamNode *foundTeam;
+    foundTeam = findTeam(teamListHead, teamListTail, id);
+    if (foundTeam == NULL)
     {
         printf("\nTeam with id %d not found.", id);
         return;
     }
-    newPlayer->playerData.teamName = team;
+    foundTeam->teamData.totalPlayers++;
+    newPlayer->playerData.teamName = foundTeam->teamData.teamName;
 
     printf("\nEnter Player Details:\n");
     printf("\nPlayer ID: ");
@@ -273,27 +281,6 @@ void addPlayerToTeam()
     fgets(name, NAME_LENGTH, stdin);
     name[strcspn(name, "\n")] = '\0';
     newPlayer->playerData.playerName = name;
-
-    printf("\nRole (1-Batsman, 2-Bowler, 3-All-rounder): ");
-    int option;
-    scanf("%d", &option);
-    if (option == 1)
-    {
-        newPlayer->playerData.role = "Batsman";
-    }
-    else if (option == 2)
-    {
-        newPlayer->playerData.role = "Bowler";
-    }
-    else if (option == 3)
-    {
-        newPlayer->playerData.role = "All-rounder";
-    }
-    else
-    {
-        printf("\nInvalid option");
-        return;
-    }
 
     printf("\nTotal Runs: ");
     scanf("%d", &newPlayer->playerData.totalRuns);
@@ -310,11 +297,41 @@ void addPlayerToTeam()
     printf("\nEconomy Rate: ");
     scanf("%f", &newPlayer->playerData.economyRate);
 
-    newPlayer->previous = playerListTail;
-    playerListTail->next = newPlayer;
-    playerListTail = newPlayer;
+    printf("\nRole (1-Batsman, 2-Bowler, 3-All-rounder): ");
+    int option;
+    scanf("%d", &option);
+    if (option == 1)
+    {
+        newPlayer->playerData.role = "Batsman";
+        newPlayer->playerData.performanceIndex = (newPlayer->playerData.battingAverage * newPlayer->playerData.strikeRate) / 100;
+        foundTeam->teamData.strikeRateSum += newPlayer->playerData.strikeRate;
+        foundTeam->teamData.totalStrikers++;
+        foundTeam->teamData.averageBattingStrikeRate = foundTeam->teamData.strikeRateSum / foundTeam->teamData.totalStrikers;
+    }
+    else if (option == 2)
+    {
+        newPlayer->playerData.role = "Bowler";
+        newPlayer->playerData.performanceIndex = (newPlayer->playerData.wickets * 2) + (100 - newPlayer->playerData.economyRate);
+    }
+    else if (option == 3)
+    {
+        newPlayer->playerData.role = "All-rounder";
+        newPlayer->playerData.performanceIndex = ((newPlayer->playerData.battingAverage * newPlayer->playerData.strikeRate) / 100) + (newPlayer->playerData.wickets * 2);
+        foundTeam->teamData.strikeRateSum += newPlayer->playerData.strikeRate;
+        foundTeam->teamData.totalStrikers++;
+        foundTeam->teamData.averageBattingStrikeRate = foundTeam->teamData.strikeRateSum / foundTeam->teamData.totalStrikers;
+    }
+    else
+    {
+        printf("\nInvalid option");
+        return;
+    }
 
-    printf("\nPlayer added successfully to Team India!");
+    newPlayer->previous = foundTeam->teamData.tailPointerToPlayers;
+    foundTeam->teamData.tailPointerToPlayers->next = newPlayer;
+    foundTeam->teamData.tailPointerToPlayers = newPlayer;
+
+    printf("\nPlayer added successfully to Team %s!", foundTeam->teamData.teamName);
 }
 
 void displayPlayersOfTeam() {}
