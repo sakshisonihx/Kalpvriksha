@@ -6,6 +6,7 @@
 #define NAME_LENGTH 51
 #define PLAYERS_PER_TEAM 50
 #define MAX_TEAMS 10
+#define MAX_ID 1500
 
 typedef struct
 {
@@ -39,7 +40,7 @@ typedef struct
 typedef struct TeamNode
 {
     TeamDetails teamData;
-    // helper fields to update avg strike rate in O(1) when we add a new player
+    // helper fields
     float strikeRateSum;
     int totalStrikers;
     PlayerNode *allBatsmen;
@@ -59,15 +60,23 @@ void displayPlayersOfTeam();
 void displayTeamsByStrikeRate();
 void displayTopNPlayers();
 void displayPlayersByRole();
+// helper functions
+void insertInRoleList(PlayerNode *, PlayerNode **);
+TeamNode *findTeam(int, int, int);
+void printPlayers(TeamNode *, char *, int);
+void heapifyUp(int);
+void heapifyDown(int);
+PlayerNode *extractMax();
+void insertInHeap(PlayerNode *);
 
 int main()
 {
     initializeTeams();
-    printf("\n%d %d", teamsList[0].teamData.teamId, teamsList[MAX_TEAMS - 1].teamData.teamId);
     displayMenu();
     return 0;
 }
 
+// inserting players in lists according to their role
 void insertInRoleList(PlayerNode *player, PlayerNode **listHead)
 {
     if (*listHead == NULL)
@@ -97,7 +106,7 @@ void insertInRoleList(PlayerNode *player, PlayerNode **listHead)
     temp->next = player;
 }
 
-// initializing teams list
+// initializing teams array
 void initializeTeams()
 {
     for (int currentInx = 0; currentInx < MAX_TEAMS; currentInx++)
@@ -197,7 +206,11 @@ void displayMenu()
         printf("\n5. Display all players of specific role across all teams by performance index.");
         printf("\n6. Exit the program.");
         printf("\nEnter choice: ");
-        scanf("%d", &choice);
+        if (scanf("%d", &choice) != 1)
+        {
+            printf("\nError. Enter number");
+            return;
+        }
         switch (choice)
         {
         case 1:
@@ -224,6 +237,7 @@ void displayMenu()
     } while (choice != 6);
 }
 
+// finding team in array (binary search)
 TeamNode *findTeam(int start, int end, int id)
 {
     while (start <= end)
@@ -245,6 +259,7 @@ TeamNode *findTeam(int start, int end, int id)
     return NULL;
 }
 
+// add new player
 void addPlayerToTeam()
 {
     PlayerNode *newPlayer = (PlayerNode *)malloc(sizeof(PlayerNode));
@@ -256,7 +271,17 @@ void addPlayerToTeam()
     newPlayer->next = NULL;
     int id;
     printf("\nEnter Team ID to add player: ");
-    scanf("%d", &id);
+    if (scanf("%d", &id) != 1)
+    {
+        printf("\nError. Enter Number");
+        return;
+    }
+    if (id > MAX_ID || id < 1)
+    {
+        printf("Enter a value between 1 and %d", MAX_ID);
+        return;
+    }
+
     TeamNode *foundTeam;
     foundTeam = findTeam(0, MAX_TEAMS - 1, id);
     if (foundTeam == NULL)
@@ -269,11 +294,14 @@ void addPlayerToTeam()
 
     printf("\nEnter Player Details:\n");
     printf("\nPlayer ID: ");
-    scanf("%d", &newPlayer->playerData.playerId);
+    if (scanf("%d", &newPlayer->playerData.playerId) != 1)
+    {
+        printf("\nError. Enter number");
+        return;
+    }
 
     int clearInput;
-    while ((clearInput = getchar()) != '\n' && clearInput != EOF)
-        ;
+    while ((clearInput = getchar()) != '\n' && clearInput != EOF);
     printf("\nName: ");
     char name[NAME_LENGTH];
     fgets(name, NAME_LENGTH, stdin);
@@ -281,19 +309,39 @@ void addPlayerToTeam()
     newPlayer->playerData.playerName = strdup(name);
 
     printf("\nTotal Runs: ");
-    scanf("%d", &newPlayer->playerData.totalRuns);
+    if (scanf("%d", &newPlayer->playerData.totalRuns) != 1)
+    {
+        printf("\nError. Enter number");
+        return;
+    }
 
     printf("\nBatting Average: ");
-    scanf("%f", &newPlayer->playerData.battingAverage);
+    if (scanf("%f", &newPlayer->playerData.battingAverage) != 1)
+    {
+        printf("\nError. Enter number(floating point/decimal)");
+        return;
+    }
 
     printf("\nStrike Rate: ");
-    scanf("%f", &newPlayer->playerData.strikeRate);
+    if (scanf("%f", &newPlayer->playerData.strikeRate) != 1)
+    {
+        printf("\nError. Enter number(floating point/decimal)");
+        return;
+    }
 
     printf("\nWickets: ");
-    scanf("%d", &newPlayer->playerData.wickets);
+    if (scanf("%d", &newPlayer->playerData.wickets) != 1)
+    {
+        printf("\nError. Enter number");
+        return;
+    }
 
     printf("\nEconomy Rate: ");
-    scanf("%f", &newPlayer->playerData.economyRate);
+    if (scanf("%f", &newPlayer->playerData.economyRate) != 1)
+    {
+        printf("\nError. Enter number(floating point/decimal)");
+        return;
+    }
 
     printf("\nRole (1-Batsman, 2-Bowler, 3-All-rounder): ");
     int option;
@@ -331,6 +379,7 @@ void addPlayerToTeam()
     printf("\nPlayer added successfully to Team %s!", foundTeam->teamData.teamName);
 }
 
+// printing player details
 void printPlayers(TeamNode *currentTeam, char *role, int playerCount)
 {
     PlayerNode *temp = NULL;
@@ -357,11 +406,16 @@ void printPlayers(TeamNode *currentTeam, char *role, int playerCount)
     }
 }
 
+// display all playrs of team
 void displayPlayersOfTeam()
 {
     int id;
     printf("\nEnter Team ID: ");
-    scanf("%d", &id);
+    if (scanf("%d", &id) != 1)
+    {
+        printf("\nError. Enter number");
+        return;
+    }
     TeamNode *foundTeam;
     foundTeam = findTeam(0, MAX_TEAMS - 1, id);
     if (foundTeam == NULL)
@@ -397,12 +451,13 @@ void displayPlayersOfTeam()
     printf("\n");
 }
 
-void displayTeamsByStrikeRate(TeamNode team[])
+// display teams by average batting strike rate
+void displayTeamsByStrikeRate()
 {
     TeamNode temp[MAX_TEAMS];
     for (int currInx = 0; currInx < MAX_TEAMS; currInx++)
     {
-        temp[currInx] = team[currInx];
+        temp[currInx] = teamsList[currInx];
     }
     for (int i = 1; i < MAX_TEAMS; i++)
     {
@@ -439,11 +494,16 @@ void displayTeamsByStrikeRate(TeamNode team[])
     }
 }
 
+// display N players of a team by performance index
 void displayTopNPlayers()
 {
     int id, noOfPlayers, choice;
     printf("\nEnter team ID: ");
-    scanf("%d", &id);
+    if (scanf("%d", &id) != 1)
+    {
+        printf("\nError. Enter number");
+        return;
+    }
     TeamNode *foundTeam = findTeam(0, MAX_TEAMS - 1, id);
     if (foundTeam == NULL)
     {
@@ -453,8 +513,17 @@ void displayTopNPlayers()
 
     printf("\nEnter role (1-Batsman, 2-Bowler, 3-All-rounder): ");
     scanf("%d", &choice);
+    if (choice > 3 || choice < 1)
+    {
+        printf("\nInvalid choice");
+        return;
+    }
     printf("\nEnter number of players: ");
-    scanf("%d", &noOfPlayers);
+    if (scanf("%d", &noOfPlayers) != 1)
+    {
+        printf("\nError. Enter number");
+        return;
+    }
 
     printf("\n");
     for (int i = 0; i < 130; i++)
@@ -550,13 +619,19 @@ void insertInHeap(PlayerNode *element)
     totalHeapElements++;
 }
 
+// display all players of a role across the teams
 void displayPlayersByRole()
 {
     int choice;
     printf("\nEnter role (1-Batsman, 2-Bowler, 3-All-rounder): ");
     scanf("%d", &choice);
-    printf("%s of all teams: ", (choice == 1) ? "Batsmen" : (choice == 2) ? "Bowlers"
-                                                                          : "All-rounders");
+    if (choice > 3 || choice < 1)
+    {
+        printf("\nInvalid choice");
+        return;
+    }
+
+    printf("%s of all teams: ", (choice == 1) ? "Batsmen" : (choice == 2) ? "Bowlers" : "All-rounders");
     totalHeapElements = 0;
     for (int currentInx = 0; currentInx < MAX_TEAMS; currentInx++)
     {
