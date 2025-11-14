@@ -152,7 +152,7 @@ void displayMenu()
     int choice;
     do
     {
-        printf("\n===================================");
+        printf("\n\n===================================");
         printf("\nICC ODI Player Performance Analyzer");
         printf("\n===================================");
         printf("\n1. Add player to team.");
@@ -172,7 +172,7 @@ void displayMenu()
             displayPlayersOfTeam();
             break;
         case 3:
-            displayTeamsByStrikeRate();
+            displayTeamsByStrikeRate(teamsList);
             break;
         case 4:
             displayTopNPlayers();
@@ -310,6 +310,7 @@ void displayPlayersOfTeam()
         return;
     }
 
+    printf("\nPlayers of team %s: \n", foundTeam->teamData.teamName);
     printf("\n");
     for (int i = 0; i < 130; i++)
     {
@@ -334,11 +335,50 @@ void displayPlayersOfTeam()
     }
     printf("\n\nTotal Players: %d", foundTeam->teamData.totalPlayers);
     printf("\nAverage Batting Strike Rate: %.2f", foundTeam->teamData.averageBattingStrikeRate);
-    printf("\nTotal Batting Strike Rate: %.2f", foundTeam->strikeRateSum);
     printf("\n");
 }
 
-void displayTeamsByStrikeRate() {}
+void displayTeamsByStrikeRate(TeamNode team[])
+{
+    TeamNode temp[MAX_TEAMS];
+    for (int currInx = 0; currInx < MAX_TEAMS; currInx++)
+    {
+        temp[currInx] = team[currInx];
+    }
+    for (int i = 1; i < MAX_TEAMS; i++)
+    {
+        TeamNode currentTeam = temp[i];
+        int j = i - 1;
+        while (j >= 0 && temp[j].teamData.averageBattingStrikeRate < currentTeam.teamData.averageBattingStrikeRate)
+        {
+            temp[j + 1] = temp[j];
+            j--;
+        }
+        temp[j + 1] = currentTeam;
+    }
+
+    printf("\nTeams sorted by average batting strike rate:\n");
+    printf("\n");
+    for (int i = 0; i < 80; i++)
+    {
+        printf("%c", '=');
+    }
+    printf("\n%-5s %-15s %-15s %-15s", "ID", "Team Name", "Avg Bat SR", "Total Players");
+    printf("\n");
+    for (int i = 0; i < 80; i++)
+    {
+        printf("%c", '=');
+    }
+    for (int current = 0; current < MAX_TEAMS; current++)
+    {
+        printf("\n%-5d %-15s %-15.2f %-15d", temp[current].teamData.teamId, temp[current].teamData.teamName, temp[current].teamData.averageBattingStrikeRate, temp[current].teamData.totalPlayers);
+    }
+    printf("\n");
+    for (int i = 0; i < 80; i++)
+    {
+        printf("%c", '=');
+    }
+}
 
 void displayTopNPlayers() {}
 
