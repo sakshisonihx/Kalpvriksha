@@ -42,8 +42,9 @@ typedef struct TeamNode
     // helper fields to update avg strike rate in O(1) when we add a new player
     float strikeRateSum;
     int totalStrikers;
-    PlayerNode *headPointerToPlayers;
-    PlayerNode *tailPointerToPlayers;
+    PlayerNode *allBatsmen;
+    PlayerNode *allBowlers;
+    PlayerNode *allAllRounders;
 } TeamNode;
 
 static TeamNode teamsList[MAX_TEAMS] = {0};
@@ -65,6 +66,35 @@ int main()
     return 0;
 }
 
+void insertInRoleList(PlayerNode *player, PlayerNode **listHead)
+{
+    if (*listHead == NULL)
+    {
+        *listHead = player;
+        return;
+    }
+    else if ((*listHead)->playerData.performanceIndex < player->playerData.performanceIndex)
+    {
+        player->next = *listHead;
+        player->previous = NULL;
+        (*listHead)->previous = player;
+        *listHead = player;
+        return;
+    }
+    PlayerNode *temp = *listHead;
+    while (temp->next != NULL && temp->next->playerData.performanceIndex > player->playerData.performanceIndex)
+    {
+        temp = temp->next;
+    }
+    player->next = temp->next;
+    player->previous = temp;
+    if (temp->next != NULL)
+    {
+        temp->next->previous = player;
+    }
+    temp->next = player;
+}
+
 // initializing teams list
 void initializeTeams()
 {
@@ -72,8 +102,9 @@ void initializeTeams()
     {
         teamsList[currentInx].teamData.teamId = currentInx + 1;
         teamsList[currentInx].teamData.teamName = teams[currentInx];
-        teamsList[currentInx].headPointerToPlayers = NULL;
-        teamsList[currentInx].tailPointerToPlayers = NULL;
+        teamsList[currentInx].allAllRounders = NULL;
+        teamsList[currentInx].allBatsmen = NULL;
+        teamsList[currentInx].allBowlers = NULL;
 
         int count = 0, strikerCount = 0;
         float strikeTotal = 0;
@@ -83,24 +114,26 @@ void initializeTeams()
             if (strcmp(teams[currentInx], players[currentPlayer].team) == 0)
             {
                 count++;
+
+                PlayerNode *newPlayer = initializePlayer(players[currentPlayer]);
+
                 if (strcmp(players[currentPlayer].role, "All-rounder") == 0 ||
                     strcmp(players[currentPlayer].role, "Batsman") == 0)
                 {
                     strikerCount++;
                     strikeTotal += players[currentPlayer].strikeRate;
-                }
-
-                PlayerNode *newPlayer = initializePlayer(players[currentPlayer]);
-                if (teamsList[currentInx].headPointerToPlayers == NULL)
-                {
-                    teamsList[currentInx].headPointerToPlayers = newPlayer;
-                    teamsList[currentInx].tailPointerToPlayers = newPlayer;
+                    if (strcmp(players[currentPlayer].role, "All-rounder") == 0)
+                    {
+                        insertInRoleList(newPlayer, &teamsList[currentInx].allAllRounders);
+                    }
+                    else
+                    {
+                        insertInRoleList(newPlayer, &teamsList[currentInx].allBatsmen);
+                    }
                 }
                 else
                 {
-                    newPlayer->previous = teamsList[currentInx].tailPointerToPlayers;
-                    teamsList[currentInx].tailPointerToPlayers->next = newPlayer;
-                    teamsList[currentInx].tailPointerToPlayers = newPlayer;
+                    insertInRoleList(newPlayer, &teamsList[currentInx].allBowlers);
                 }
             }
         }
@@ -270,11 +303,13 @@ void addPlayerToTeam()
         foundTeam->strikeRateSum += newPlayer->playerData.strikeRate;
         foundTeam->totalStrikers++;
         foundTeam->teamData.averageBattingStrikeRate = foundTeam->strikeRateSum / foundTeam->totalStrikers;
+        insertInRoleList(newPlayer, &foundTeam->allBatsmen);
     }
     else if (option == 2)
     {
         newPlayer->playerData.role = "Bowler";
         newPlayer->playerData.performanceIndex = (newPlayer->playerData.wickets * 2) + (100 - newPlayer->playerData.economyRate);
+        insertInRoleList(newPlayer, &foundTeam->allBowlers);
     }
     else if (option == 3)
     {
@@ -283,6 +318,7 @@ void addPlayerToTeam()
         foundTeam->strikeRateSum += newPlayer->playerData.strikeRate;
         foundTeam->totalStrikers++;
         foundTeam->teamData.averageBattingStrikeRate = foundTeam->strikeRateSum / foundTeam->totalStrikers;
+        insertInRoleList(newPlayer, &foundTeam->allAllRounders);
     }
     else
     {
@@ -290,11 +326,33 @@ void addPlayerToTeam()
         return;
     }
 
-    newPlayer->previous = foundTeam->tailPointerToPlayers;
-    foundTeam->tailPointerToPlayers->next = newPlayer;
-    foundTeam->tailPointerToPlayers = newPlayer;
-
     printf("\nPlayer added successfully to Team %s!", foundTeam->teamData.teamName);
+}
+
+void printPlayers(TeamNode *currentTeam, char *role, int playerCount)
+{
+    PlayerNode *temp = NULL;
+    int count = 0;
+
+    if (strcmp(role, "Batsman") == 0)
+    {
+        temp = currentTeam->allBatsmen;
+    }
+    else if (strcmp(role, "Bowler") == 0)
+    {
+        temp = currentTeam->allBowlers;
+    }
+    else if (strcmp(role, "All-rounder") == 0)
+    {
+        temp = currentTeam->allAllRounders;
+    }
+
+    while (temp != NULL && count < playerCount)
+    {
+        printf("\n%-4d %-25s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", temp->playerData.playerId, temp->playerData.playerName, temp->playerData.role, temp->playerData.totalRuns, temp->playerData.battingAverage, temp->playerData.strikeRate, temp->playerData.wickets, temp->playerData.economyRate, temp->playerData.performanceIndex);
+        temp = temp->next;
+        count++;
+    }
 }
 
 void displayPlayersOfTeam()
@@ -322,12 +380,11 @@ void displayPlayersOfTeam()
     {
         printf("%c", '=');
     }
-    PlayerNode *temp = foundTeam->headPointerToPlayers;
-    while (temp != NULL)
-    {
-        printf("\n%-4d %-25s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", temp->playerData.playerId, temp->playerData.playerName, temp->playerData.role, temp->playerData.totalRuns, temp->playerData.battingAverage, temp->playerData.strikeRate, temp->playerData.wickets, temp->playerData.economyRate, temp->playerData.performanceIndex);
-        temp = temp->next;
-    }
+
+    printPlayers(foundTeam, "Batsman", foundTeam->teamData.totalPlayers);
+    printPlayers(foundTeam, "Bowler", foundTeam->teamData.totalPlayers);
+    printPlayers(foundTeam, "All-rounder", foundTeam->teamData.totalPlayers);
+
     printf("\n");
     for (int i = 0; i < 130; i++)
     {
@@ -380,6 +437,57 @@ void displayTeamsByStrikeRate(TeamNode team[])
     }
 }
 
-void displayTopNPlayers() {}
+void displayTopNPlayers()
+{
+    int id, noOfPlayers, choice;
+    printf("\nEnter team ID: ");
+    scanf("%d", &id);
+    TeamNode *foundTeam = findTeam(0, MAX_TEAMS - 1, id);
+    if (foundTeam == NULL)
+    {
+        printf("\nTeam with id %d not found.", id);
+        return;
+    }
+
+    printf("\nEnter role(1-Batsman, 2-Bowler, 3-All-rounder): ");
+    scanf("%d", &choice);
+    printf("\nEnter number of players: ");
+    scanf("%d", &noOfPlayers);
+
+    printf("\n");
+    for (int i = 0; i < 130; i++)
+    {
+        printf("%c", '=');
+    }
+    printf("\n%-4s %-25s %-15s %-10s %-15s %-15s %-10s %-15s %-15s", "ID", "Name", "Role", "Runs", "Batting Avg", "Strike Rate", "Wickets", "Economy Rate", "Perf. Index");
+    printf("\n");
+    for (int i = 0; i < 130; i++)
+    {
+        printf("%c", '=');
+    }
+
+    if (choice == 1)
+    {
+        printPlayers(foundTeam, "Batsman", noOfPlayers);
+    }
+    else if (choice == 2)
+    {
+        printPlayers(foundTeam, "Bowler", noOfPlayers);
+    }
+    else if (choice == 3)
+    {
+        printPlayers(foundTeam, "All-rounder", noOfPlayers);
+    }
+    else
+    {
+        printf("\nInvalid choice");
+        return;
+    }
+    printf("\n");
+    for (int i = 0; i < 130; i++)
+    {
+        printf("%c", '=');
+    }
+}
 
 void displayPlayersByRole() {}
