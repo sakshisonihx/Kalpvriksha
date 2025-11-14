@@ -48,6 +48,8 @@ typedef struct TeamNode
 } TeamNode;
 
 static TeamNode teamsList[MAX_TEAMS] = {0};
+static PlayerNode *maxHeap[MAX_TEAMS];
+static int totalHeapElements = 0;
 
 PlayerNode *initializePlayer(Player);
 void initializeTeams();
@@ -349,7 +351,7 @@ void printPlayers(TeamNode *currentTeam, char *role, int playerCount)
 
     while (temp != NULL && count < playerCount)
     {
-        printf("\n%-4d %-25s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", temp->playerData.playerId, temp->playerData.playerName, temp->playerData.role, temp->playerData.totalRuns, temp->playerData.battingAverage, temp->playerData.strikeRate, temp->playerData.wickets, temp->playerData.economyRate, temp->playerData.performanceIndex);
+        printf("\n%-5d %-25s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", temp->playerData.playerId, temp->playerData.playerName, temp->playerData.role, temp->playerData.totalRuns, temp->playerData.battingAverage, temp->playerData.strikeRate, temp->playerData.wickets, temp->playerData.economyRate, temp->playerData.performanceIndex);
         temp = temp->next;
         count++;
     }
@@ -449,7 +451,7 @@ void displayTopNPlayers()
         return;
     }
 
-    printf("\nEnter role(1-Batsman, 2-Bowler, 3-All-rounder): ");
+    printf("\nEnter role (1-Batsman, 2-Bowler, 3-All-rounder): ");
     scanf("%d", &choice);
     printf("\nEnter number of players: ");
     scanf("%d", &noOfPlayers);
@@ -490,4 +492,116 @@ void displayTopNPlayers()
     }
 }
 
-void displayPlayersByRole() {}
+void heapifyUp(int index)
+{
+    int parent = (index - 1) / 2;
+    if (index != 0 && maxHeap[index]->playerData.performanceIndex > maxHeap[parent]->playerData.performanceIndex)
+    {
+        PlayerNode *temp = maxHeap[index];
+        maxHeap[index] = maxHeap[parent];
+        maxHeap[parent] = temp;
+        heapifyUp(parent);
+    }
+}
+
+void heapifyDown(int index)
+{
+    int leftChild = 2 * index + 1;
+    int rightChild = 2 * index + 2;
+    int largest = index;
+    if (leftChild < totalHeapElements && maxHeap[leftChild]->playerData.performanceIndex > maxHeap[largest]->playerData.performanceIndex)
+    {
+        largest = leftChild;
+    }
+    if (rightChild < totalHeapElements && maxHeap[rightChild]->playerData.performanceIndex > maxHeap[largest]->playerData.performanceIndex)
+    {
+        largest = rightChild;
+    }
+    if (largest != index)
+    {
+        PlayerNode *temp = maxHeap[largest];
+        maxHeap[largest] = maxHeap[index];
+        maxHeap[index] = temp;
+        heapifyDown(largest);
+    }
+}
+
+PlayerNode *extractMax()
+{
+    if (totalHeapElements <= 0)
+    {
+        return NULL;
+    }
+    PlayerNode *element = maxHeap[0];
+    maxHeap[0] = maxHeap[totalHeapElements - 1];
+    totalHeapElements--;
+    heapifyDown(0);
+    return element;
+}
+
+void insertInHeap(PlayerNode *element)
+{
+    if (totalHeapElements >= MAX_TEAMS)
+    {
+        return;
+    }
+    maxHeap[totalHeapElements] = element;
+    heapifyUp(totalHeapElements);
+    totalHeapElements++;
+}
+
+void displayPlayersByRole()
+{
+    int choice;
+    printf("\nEnter role (1-Batsman, 2-Bowler, 3-All-rounder): ");
+    scanf("%d", &choice);
+    printf("%s of all teams: ", (choice == 1) ? "Batsmen" : (choice == 2) ? "Bowlers"
+                                                                          : "All-rounders");
+    totalHeapElements = 0;
+    for (int currentInx = 0; currentInx < MAX_TEAMS; currentInx++)
+    {
+        PlayerNode *head = NULL;
+        if (choice == 1)
+        {
+            head = teamsList[currentInx].allBatsmen;
+        }
+        else if (choice == 2)
+        {
+            head = teamsList[currentInx].allBowlers;
+        }
+        if (choice == 3)
+        {
+            head = teamsList[currentInx].allAllRounders;
+        }
+        insertInHeap(head);
+    }
+
+    printf("\n");
+    for (int i = 0; i < 145; i++)
+    {
+        printf("%c", '=');
+    }
+    printf("\n%-4s %-25s %-15s %-15s %-10s %-15s %-15s %-10s %-15s %-15s", "ID", "Name", "Team", "Role", "Runs", "Batting Avg", "Strike Rate", "Wickets", "Economy Rate", "Perf. Index");
+    printf("\n");
+    for (int i = 0; i < 145; i++)
+    {
+        printf("%c", '=');
+    }
+
+    while (totalHeapElements > 0)
+    {
+        PlayerNode *bestPlayer = extractMax();
+        printf("\n%-5d %-25s %-15s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", bestPlayer->playerData.playerId, bestPlayer->playerData.playerName, bestPlayer->playerData.teamName, bestPlayer->playerData.role, bestPlayer->playerData.totalRuns, bestPlayer->playerData.battingAverage, bestPlayer->playerData.strikeRate, bestPlayer->playerData.wickets, bestPlayer->playerData.economyRate, bestPlayer->playerData.performanceIndex);
+
+        PlayerNode *nextPlayer = bestPlayer->next;
+        if (nextPlayer != NULL)
+        {
+            insertInHeap(nextPlayer);
+        }
+    }
+    printf("\n");
+    for (int i = 0; i < 145; i++)
+    {
+        printf("%c", '=');
+    }
+}
