@@ -176,7 +176,8 @@ void addPlayerToTeam()
     else if (option == 3)
     {
         newPlayer->playerData.role = "All-rounder";
-        newPlayer->playerData.performanceIndex = ((newPlayer->playerData.battingAverage * newPlayer->playerData.strikeRate) / 100) + (newPlayer->playerData.wickets * 2);
+        newPlayer->playerData.performanceIndex = ((newPlayer->playerData.battingAverage * newPlayer->playerData.strikeRate) / 100)
+        + (newPlayer->playerData.wickets * 2);
         foundTeam->strikeRateSum += newPlayer->playerData.strikeRate;
         foundTeam->totalStrikers++;
         foundTeam->teamData.averageBattingStrikeRate = foundTeam->strikeRateSum / foundTeam->totalStrikers;
@@ -383,7 +384,10 @@ void displayPlayersByRole()
     while (totalHeapElements > 0)
     {
         PlayerNode *bestPlayer = extractMax();
-        printf("\n%-5d %-25s %-15s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", bestPlayer->playerData.playerId, bestPlayer->playerData.playerName, bestPlayer->playerData.teamName, bestPlayer->playerData.role, bestPlayer->playerData.totalRuns, bestPlayer->playerData.battingAverage, bestPlayer->playerData.strikeRate, bestPlayer->playerData.wickets, bestPlayer->playerData.economyRate, bestPlayer->playerData.performanceIndex);
+        printf("\n%-5d %-25s %-15s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", bestPlayer->playerData.playerId,
+            bestPlayer->playerData.playerName, bestPlayer->playerData.teamName, bestPlayer->playerData.role,
+            bestPlayer->playerData.totalRuns, bestPlayer->playerData.battingAverage, bestPlayer->playerData.strikeRate,
+            bestPlayer->playerData.wickets, bestPlayer->playerData.economyRate, bestPlayer->playerData.performanceIndex);
 
         PlayerNode *nextPlayer = bestPlayer->next;
         if (nextPlayer != NULL)
