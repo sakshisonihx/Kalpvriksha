@@ -7,12 +7,20 @@
 #define MAX_NAME_LEN 50
 #define MAX_LINE_LEN 256
 
+// %d| - reads ID, expects a pipe
+// %49[^|] - reads up to 49 characters, stopping at the pipe
+// |%d - reads age
+#define READ_FORMAT "%d|%49[^|]|%d"
+
 typedef struct
 {
     int id;
     char name[MAX_NAME_LEN];
     int age;
 } User;
+
+// Helper function to parse a line using sscanf
+int parseUserFromLine(const char *line, User *user);
 
 int getNextId();
 void getSafeInput(char *, int);
@@ -62,23 +70,32 @@ int main()
     return 0;
 }
 
+// Helper function to parse a line of text into a User struct
+int parseUserFromLine(const char *line, User *user)
+{
+    return sscanf(line, READ_FORMAT, &user->id, user->name, &user->age);
+}
+
 int getNextId()
 {
     FILE *file = fopen(FILENAME, "r");
     int maxId = 0;
     User user;
+    char line[MAX_LINE_LEN];
 
     if (file == NULL)
     {
         return 1; // Start from 1 if file doesn't exist
     }
 
-    // Find the maximum
-    while (fscanf(file, "%d %s %d\n", &user.id, user.name, &user.age) == 3)
+    while (fgets(line, MAX_LINE_LEN, file) != NULL)
     {
-        if (user.id > maxId)
+        if (parseUserFromLine(line, &user) == 3)
         {
-            maxId = user.id;
+            if (user.id > maxId)
+            {
+                maxId = user.id;
+            }
         }
     }
     fclose(file);
@@ -101,6 +118,8 @@ void createUser()
     if (file == NULL)
     {
         perror("Error opening file for writing");
+        int clearBuffer;
+        while ((clearBuffer = getchar()) != '\n' && clearBuffer != EOF);
         return;
     }
 
@@ -125,7 +144,7 @@ void createUser()
     int clearBuffer;
     while ((clearBuffer = getchar()) != '\n' && clearBuffer != EOF);
 
-    fprintf(file, "%d %s %d\n", newUser.id, newUser.name, newUser.age);
+    fprintf(file, "%d|%s|%d\n", newUser.id, newUser.name, newUser.age);
     printf("User created successfully: ID %d\n", newUser.id);
 
     fclose(file);
@@ -142,6 +161,7 @@ void readUser()
     }
 
     User user;
+    char line[MAX_LINE_LEN];
     int recordsFound = 0;
 
     printf("\n--- Users in %s ---\n", FILENAME);
@@ -149,10 +169,13 @@ void readUser()
     printf("| %-4s | %-20s | %-4s |\n", "ID", "Name", "Age");
     printf("---------------------------------------\n");
 
-    while (fscanf(file, "%d %s %d\n", &user.id, user.name, &user.age) == 3)
+    while (fgets(line, MAX_LINE_LEN, file) != NULL)
     {
-        printf("| %-4d | %-20s | %-4d |\n", user.id, user.name, user.age);
-        recordsFound++;
+        if (parseUserFromLine(line, &user) == 3)
+        {
+            printf("| %-4d | %-20s | %-4d |\n", user.id, user.name, user.age);
+            recordsFound++;
+        }
     }
     printf("---------------------------------------\n");
 
@@ -175,6 +198,8 @@ void updateUser()
     if (scanf("%d", &targetID) != 1)
     {
         printf("Invalid ID input.\n");
+        int clearBuffer;
+        while ((clearBuffer = getchar()) != '\n' && clearBuffer != EOF);
         return;
     }
     // Consuming the rest of the line after reading ID
@@ -208,19 +233,22 @@ void updateUser()
     }
 
     User user;
+    char line[MAX_LINE_LEN];
     int found = 0;
 
-    while (fscanf(originalFile, "%d %s %d\n", &user.id, user.name, &user.age) == 3)
+    while (fgets(line, MAX_LINE_LEN, originalFile) != NULL)
     {
-        if (user.id == targetID)
+        if (parseUserFromLine(line, &user) == 3)
         {
-            // Found the target user so write updated data
-            fprintf(temporaryFile, "%d %s %d\n", targetID, newName, newAge);
-            found = 1;
-        }
-        else // copy original data
-        {
-            fprintf(temporaryFile, "%d %s %d\n", user.id, user.name, user.age);
+            if (user.id == targetID)
+            {
+                fprintf(temporaryFile, "%d|%s|%d\n", targetID, newName, newAge);
+                found = 1;
+            }
+            else // copy original data
+            {
+                fprintf(temporaryFile, "%d|%s|%d\n", user.id, user.name, user.age);
+            }
         }
     }
 
@@ -269,18 +297,23 @@ void deleteUser()
     }
 
     User user;
+    char line[MAX_LINE_LEN];
     int found = 0;
 
-    while (fscanf(originalFile, "%d %s %d\n", &user.id, user.name, &user.age) == 3)
+    while (fgets(line, MAX_LINE_LEN, originalFile) != NULL)
     {
-        if (user.id == targetID)
+        if (parseUserFromLine(line, &user) == 3)
         {
-            // if found, do not write the data, effectively deleting it
-            found = 1;
-        }
-        else
-        {
-            fprintf(temporaryFile, "%d %s %d\n", user.id, user.name, user.age);
+            if (user.id == targetID)
+            {
+                // if found, do not write the data, effectively deleting it
+                found = 1;
+            }
+            else
+            {
+                // Write original data back using the pipe delimiter
+                fprintf(temporaryFile, "%d|%s|%d\n", user.id, user.name, user.age);
+            }
         }
     }
 
