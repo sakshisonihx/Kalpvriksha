@@ -1,6 +1,5 @@
 #include "Players_data.h"
-#include "Player_structure.h"
-#include "Team_structure.h"
+#include "Structure_definition.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

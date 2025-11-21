@@ -25,13 +25,41 @@ typedef struct PlayerNode
     struct PlayerNode *previous;
 } PlayerNode;
 
+typedef struct
+{
+    int teamId;
+    const char *teamName;
+    int totalPlayers;
+    float averageBattingStrikeRate;
+} TeamDetails;
+
+typedef struct TeamNode
+{
+    TeamDetails teamData;
+    // helper fields
+    float strikeRateSum;
+    int totalStrikers;
+    PlayerNode *allBatsmen;
+    PlayerNode *allBowlers;
+    PlayerNode *allAllRounders;
+} TeamNode;
+
 // global variables
 extern PlayerNode *maxHeap[MAX_TEAMS];
 extern int totalHeapElements;
+extern TeamNode teamsList[MAX_TEAMS];
 
-// function for structure manipulation
+// function for player structure manipulation
 PlayerNode *initializePlayer(Player);
 void insertInRoleList(PlayerNode *, PlayerNode **);
+
+// function for team structure manipulation
+void initializeTeams();
+TeamNode *findTeam(int, int, int);
+void printPlayers(TeamNode *, char *, int);
+
+// function for sorting
+void insertionSort(TeamNode[]);
 void heapifyUp(int);
 void heapifyDown(int);
 PlayerNode *extractMax();
