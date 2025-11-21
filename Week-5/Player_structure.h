@@ -25,12 +25,16 @@ typedef struct PlayerNode
     struct PlayerNode *previous;
 } PlayerNode;
 
-//global variables
+// global variables
 extern PlayerNode *maxHeap[MAX_TEAMS];
 extern int totalHeapElements;
 
-//function for structure manipulation
+// function for structure manipulation
 PlayerNode *initializePlayer(Player);
 void insertInRoleList(PlayerNode *, PlayerNode **);
+void heapifyUp(int);
+void heapifyDown(int);
+PlayerNode *extractMax();
+void insertInHeap(PlayerNode *);
 
 #endif

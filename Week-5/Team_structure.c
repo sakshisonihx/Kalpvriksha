@@ -103,3 +103,19 @@ void printPlayers(TeamNode *currentTeam, char *role, int playerCount)
         count++;
     }
 }
+
+// sorting teams according to Avg Bat Strike Rate
+void insertionSort(TeamNode array[])
+{
+    for (int i = 1; i < MAX_TEAMS; i++)
+    {
+        TeamNode currentTeam = array[i];
+        int j = i - 1;
+        while (j >= 0 && array[j].teamData.averageBattingStrikeRate < currentTeam.teamData.averageBattingStrikeRate)
+        {
+            array[j + 1] = array[j];
+            j--;
+        }
+        array[j + 1] = currentTeam;
+    }
+}

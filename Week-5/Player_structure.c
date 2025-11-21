@@ -71,3 +71,65 @@ void insertInRoleList(PlayerNode *player, PlayerNode **listHead)
     }
     temp->next = player;
 }
+
+// heapify array upwards (child to parent)
+void heapifyUp(int index)
+{
+    int parent = (index - 1) / 2;
+    if (index != 0 && maxHeap[index]->playerData.performanceIndex > maxHeap[parent]->playerData.performanceIndex)
+    {
+        PlayerNode *temp = maxHeap[index];
+        maxHeap[index] = maxHeap[parent];
+        maxHeap[parent] = temp;
+        heapifyUp(parent);
+    }
+}
+
+// heapify array downwards (parent to child)
+void heapifyDown(int index)
+{
+    int leftChild = 2 * index + 1;
+    int rightChild = 2 * index + 2;
+    int largest = index;
+    if (leftChild < totalHeapElements && maxHeap[leftChild]->playerData.performanceIndex > maxHeap[largest]->playerData.performanceIndex)
+    {
+        largest = leftChild;
+    }
+    if (rightChild < totalHeapElements && maxHeap[rightChild]->playerData.performanceIndex > maxHeap[largest]->playerData.performanceIndex)
+    {
+        largest = rightChild;
+    }
+    if (largest != index)
+    {
+        PlayerNode *temp = maxHeap[largest];
+        maxHeap[largest] = maxHeap[index];
+        maxHeap[index] = temp;
+        heapifyDown(largest);
+    }
+}
+
+// extract max element from heap (root)
+PlayerNode *extractMax()
+{
+    if (totalHeapElements <= 0)
+    {
+        return NULL;
+    }
+    PlayerNode *element = maxHeap[0];
+    maxHeap[0] = maxHeap[totalHeapElements - 1];
+    totalHeapElements--;
+    heapifyDown(0);
+    return element;
+}
+
+// insert element in heap
+void insertInHeap(PlayerNode *element)
+{
+    if (totalHeapElements >= MAX_TEAMS)
+    {
+        return;
+    }
+    maxHeap[totalHeapElements] = element;
+    heapifyUp(totalHeapElements);
+    totalHeapElements++;
+}

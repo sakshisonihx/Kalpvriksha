@@ -21,12 +21,13 @@ typedef struct TeamNode
     PlayerNode *allAllRounders;
 } TeamNode;
 
-//global variable
+// global variable
 extern TeamNode teamsList[MAX_TEAMS];
 
-//function for structure manipulation
+// function for structure manipulation
 void initializeTeams();
 TeamNode *findTeam(int, int, int);
 void printPlayers(TeamNode *, char *, int);
+void insertionSort(TeamNode[]);
 
 #endif

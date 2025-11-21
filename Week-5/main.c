@@ -1,7 +1,6 @@
 #include "Players_data.h"
 #include "Player_structure.h"
 #include "Team_structure.h"
-#include "Sorting_functions.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +24,13 @@ int main()
     return 0;
 }
 
+// clearing input buffer
+void clearInputBuffer()
+{
+    int clearInput;
+    while ((clearInput = getchar()) != '\n' && clearInput != EOF);
+}
+
 void displayMenu()
 {
     int choice;
@@ -43,6 +49,7 @@ void displayMenu()
         if (scanf("%d", &choice) != 1)
         {
             printf("\nError. Enter number");
+            clearInputBuffer();
             return;
         }
         switch (choice)
@@ -86,11 +93,13 @@ void addPlayerToTeam()
     if (scanf("%d", &id) != 1)
     {
         printf("\nError. Enter Number");
+        clearInputBuffer();
         return;
     }
     if (id > MAX_ID || id < 1)
     {
         printf("Enter a value between 1 and %d", MAX_ID);
+        clearInputBuffer();
         return;
     }
 
@@ -109,13 +118,13 @@ void addPlayerToTeam()
     if (scanf("%d", &newPlayer->playerData.playerId) != 1)
     {
         printf("\nError. Enter number");
+        clearInputBuffer();
         return;
     }
 
-    int clearInput;
-    while ((clearInput = getchar()) != '\n' && clearInput != EOF);
     printf("\nName: ");
     char name[NAME_LENGTH];
+    clearInputBuffer();
     fgets(name, NAME_LENGTH, stdin);
     name[strcspn(name, "\n")] = '\0';
     newPlayer->playerData.playerName = strdup(name);
@@ -124,6 +133,7 @@ void addPlayerToTeam()
     if (scanf("%d", &newPlayer->playerData.totalRuns) != 1)
     {
         printf("\nError. Enter number");
+        clearInputBuffer();
         return;
     }
 
@@ -131,6 +141,7 @@ void addPlayerToTeam()
     if (scanf("%f", &newPlayer->playerData.battingAverage) != 1)
     {
         printf("\nError. Enter number(floating point/decimal)");
+        clearInputBuffer();
         return;
     }
 
@@ -138,6 +149,7 @@ void addPlayerToTeam()
     if (scanf("%f", &newPlayer->playerData.strikeRate) != 1)
     {
         printf("\nError. Enter number(floating point/decimal)");
+        clearInputBuffer();
         return;
     }
 
@@ -145,6 +157,7 @@ void addPlayerToTeam()
     if (scanf("%d", &newPlayer->playerData.wickets) != 1)
     {
         printf("\nError. Enter number");
+        clearInputBuffer();
         return;
     }
 
@@ -152,12 +165,18 @@ void addPlayerToTeam()
     if (scanf("%f", &newPlayer->playerData.economyRate) != 1)
     {
         printf("\nError. Enter number(floating point/decimal)");
+        clearInputBuffer();
         return;
     }
 
     printf("\nRole (1-Batsman, 2-Bowler, 3-All-rounder): ");
     int option;
-    scanf("%d", &option);
+    if (scanf("%d", &option) != 1)
+    {
+        printf("\nError. Enter number");
+        clearInputBuffer();
+        return;
+    }
     if (option == 1)
     {
         newPlayer->playerData.role = "Batsman";
@@ -176,8 +195,7 @@ void addPlayerToTeam()
     else if (option == 3)
     {
         newPlayer->playerData.role = "All-rounder";
-        newPlayer->playerData.performanceIndex = ((newPlayer->playerData.battingAverage * newPlayer->playerData.strikeRate) / 100)
-        + (newPlayer->playerData.wickets * 2);
+        newPlayer->playerData.performanceIndex = ((newPlayer->playerData.battingAverage * newPlayer->playerData.strikeRate) / 100) + (newPlayer->playerData.wickets * 2);
         foundTeam->strikeRateSum += newPlayer->playerData.strikeRate;
         foundTeam->totalStrikers++;
         foundTeam->teamData.averageBattingStrikeRate = foundTeam->strikeRateSum / foundTeam->totalStrikers;
@@ -186,6 +204,7 @@ void addPlayerToTeam()
     else
     {
         printf("\nInvalid option");
+        clearInputBuffer();
         return;
     }
 
@@ -200,6 +219,7 @@ void displayPlayersOfTeam()
     if (scanf("%d", &id) != 1)
     {
         printf("\nError. Enter number");
+        clearInputBuffer();
         return;
     }
     TeamNode *foundTeam;
@@ -278,6 +298,7 @@ void displayTopNPlayers()
     if (scanf("%d", &id) != 1)
     {
         printf("\nError. Enter number");
+        clearInputBuffer();
         return;
     }
     TeamNode *foundTeam = findTeam(0, MAX_TEAMS - 1, id);
@@ -292,12 +313,14 @@ void displayTopNPlayers()
     if (choice > 3 || choice < 1)
     {
         printf("\nInvalid choice");
+        clearInputBuffer();
         return;
     }
     printf("\nEnter number of players: ");
     if (scanf("%d", &noOfPlayers) != 1)
     {
         printf("\nError. Enter number");
+        clearInputBuffer();
         return;
     }
 
@@ -342,10 +365,16 @@ void displayPlayersByRole()
 {
     int choice;
     printf("\nEnter role (1-Batsman, 2-Bowler, 3-All-rounder): ");
-    scanf("%d", &choice);
+    if (scanf("%d", &choice) != 1)
+    {
+        printf("\nError. Enter number");
+        clearInputBuffer();
+        return;
+    }
     if (choice > 3 || choice < 1)
     {
         printf("\nInvalid choice");
+        clearInputBuffer();
         return;
     }
 
@@ -385,9 +414,9 @@ void displayPlayersByRole()
     {
         PlayerNode *bestPlayer = extractMax();
         printf("\n%-5d %-25s %-15s %-15s %-10d %-15.2f %-15.2f %-10d %-15.2f %-15.2f", bestPlayer->playerData.playerId,
-            bestPlayer->playerData.playerName, bestPlayer->playerData.teamName, bestPlayer->playerData.role,
-            bestPlayer->playerData.totalRuns, bestPlayer->playerData.battingAverage, bestPlayer->playerData.strikeRate,
-            bestPlayer->playerData.wickets, bestPlayer->playerData.economyRate, bestPlayer->playerData.performanceIndex);
+               bestPlayer->playerData.playerName, bestPlayer->playerData.teamName, bestPlayer->playerData.role,
+               bestPlayer->playerData.totalRuns, bestPlayer->playerData.battingAverage, bestPlayer->playerData.strikeRate,
+               bestPlayer->playerData.wickets, bestPlayer->playerData.economyRate, bestPlayer->playerData.performanceIndex);
 
         PlayerNode *nextPlayer = bestPlayer->next;
         if (nextPlayer != NULL)
