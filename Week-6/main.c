@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "data_structures.h"
 
 int main()
@@ -46,4 +47,40 @@ char *get(int key)
 
 void put(int key, char *value)
 {
+    if (LRUCache.totalElements == LRUCapacity)
+    {
+        removeFromCache();
+    }
+    int index = getHashIndex(key);
+    HashNode *currentHashNode = &hashTable[index];
+
+    // key present
+    int newStringSize = strlen(value);
+    while (currentHashNode != NULL)
+    {
+        if (currentHashNode->storedDataPtr->key == key)
+        {
+            int oldStringSize = strlen(currentHashNode->storedDataPtr->data);
+            if (newStringSize > oldStringSize)
+            {
+                currentHashNode->storedDataPtr->data = (char *)realloc(currentHashNode->storedDataPtr->data,
+                                                                       (newStringSize + 1) * sizeof(char));
+                if (currentHashNode->storedDataPtr->data == NULL)
+                {
+                    printf("\nMemory allocation failed.");
+                    return;
+                }
+            }
+            strcpy(currentHashNode->storedDataPtr->data, value);
+            updatePositionInCache(currentHashNode->storedDataPtr);
+            return;
+        }
+        currentHashNode = currentHashNode->next;
+    }
+
+    // key not present
+
+    currentHashNode->storedDataPtr = insertInCache(key, value);
+    currentHashNode->next = NULL;
+    LRUCache.totalElements++;
 }
