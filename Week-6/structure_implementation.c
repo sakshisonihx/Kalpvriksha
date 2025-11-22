@@ -40,10 +40,33 @@ DataElement *insertInCache(int key, char *value)
     }
     else
     {
-        newElement->next = LRUCache.front->next;
+        newElement->next = LRUCache.front;
         LRUCache.front->previous = newElement;
         LRUCache.front = newElement;
     }
     LRUCache.totalElements++;
     return LRUCache.front;
+}
+
+void updatePositionInCache(DataElement *cacheNode)
+{
+    if (LRUCache.front == cacheNode) // element already at MRU position
+    {
+        return;
+    }
+    else if (LRUCache.rear == cacheNode)
+    {
+        LRUCache.rear = cacheNode->previous;
+        LRUCache.rear->next = NULL;
+    }
+    else
+    {
+        DataElement *previousElement = cacheNode->previous;
+        previousElement->next = cacheNode->next;
+        cacheNode->next->previous = previousElement;
+    }
+    LRUCache.front->previous = cacheNode;
+    cacheNode->next = LRUCache.front;
+    cacheNode->previous = NULL;
+    LRUCache.front = cacheNode;
 }
