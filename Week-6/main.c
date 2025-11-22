@@ -41,8 +41,22 @@ void createCache(int size)
     }
 }
 
-char *get(int key)
+void get(int key)
 {
+    int index = getHashIndex(key);
+    HashNode *currentHashNode = hashTable[index];
+    while (currentHashNode != NULL)
+    {
+        if (currentHashNode->storedDataPtr->key == key)
+        {
+            printf("\n%s", currentHashNode->storedDataPtr->data);
+            updatePositionInCache(currentHashNode->storedDataPtr);
+            return;
+        }
+        currentHashNode = currentHashNode->next;
+    }
+    // key not found
+    printf("\nNULL");
 }
 
 void put(int key, char *value)
