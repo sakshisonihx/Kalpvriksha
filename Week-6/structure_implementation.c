@@ -18,7 +18,7 @@ DataElement *insertInCache(int key, char *value)
     if (newElement == NULL)
     {
         printf("\nMemory Allocation Failed");
-        return;
+        return NULL;
     }
 
     int stringSize = strlen(value) + 1;
@@ -26,7 +26,7 @@ DataElement *insertInCache(int key, char *value)
     if (newElement->data == NULL)
     {
         printf("\nMemory Allocation Failed");
-        return;
+        return NULL;
     }
 
     strcpy(newElement->data, value);

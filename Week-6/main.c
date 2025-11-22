@@ -2,36 +2,107 @@
 #include <stdlib.h>
 #include <string.h>
 #include "data_structures.h"
+#include <ctype.h>
+
+#define INPUT_SIZE 500
+
+void takeInput(char *);
+int checkInput(char *);
+void createCache(int);
+void get(int);
+void put(int, char *);
 
 int main()
 {
-    int size;
-    printf("Enter size: ");
-    if (scanf("%d", size) != 1)
+    char inputBuffer[INPUT_SIZE];
+    while (1)
     {
-        printf("\nError. Enter number.");
-        clearBuffer();
-        return;
-    };
-    if (size < 1 || size > 1000)
-    {
-        printf("\nSize should be between 1 and 1000");
-        return;
+        printf("\n");
+        if (fgets(inputBuffer, INPUT_SIZE, stdin) == NULL)
+            break;
+        inputBuffer[strcspn(inputBuffer, "\n")] = '\0';
+        if (strcmp(inputBuffer, "exit") == 0)
+        {
+            break;
+        }
+        takeInput(inputBuffer);
     }
     return 0;
-    createCache(size);
 }
 
-// clearing buffer
-void clearBuffer()
+void takeInput(char *line)
 {
-    int character;
-    while ((character = getchar()) != '\n' && character != EOF)
-        ;
+    char *function = strtok(line, " \n");
+    char *arg1 = strtok(NULL, " \n");
+    char *arg2 = NULL;
+    char *extraArguments = NULL;
+    if (function != NULL && strcmp(function, "put") == 0)
+    {
+        if (arg1 != NULL)
+        {
+            arg2 = strtok(NULL, " \n");
+        }
+    }
+    extraArguments = strtok(NULL, " \n");
+    if (function != NULL)
+    {
+        if (extraArguments != NULL)
+        {
+            printf("\nToo many arguments given.");
+            return;
+        }
+
+        if (strcmp(function, "createCache") == 0)
+        {
+            if (arg1 && checkInput(arg1))
+            {
+                createCache(atoi(arg1));
+            }
+        }
+        else if (strcmp(function, "get") == 0)
+        {
+            if (arg1 && checkInput(arg1))
+            {
+                get(atoi(arg1));
+            }
+        }
+        else if (strcmp(function, "put") == 0)
+        {
+            if (arg1 && arg2 && checkInput(arg1))
+            {
+                put(atoi(arg1), arg2);
+            }
+        }
+        else
+        {
+            printf("\nInvalid input\n");
+        }
+    }
+}
+
+int checkInput(char *string)
+{
+    char *temp = string;
+    while (*temp != '\0')
+    {
+        if (!isdigit(*temp))
+        {
+            printf("\nError. Enter a number");
+            return 0;
+        }
+        temp += 1;
+    }
+    return 1;
 }
 
 void createCache(int size)
 {
+    if (size < 1 || size > 1000)
+    {
+        printf("\nSize should be a number between 1 and 1000");
+        return;
+    }
+
     LRUCapacity = size;
     hashTable = (HashNode **)calloc(size, sizeof(HashNode *));
     if (hashTable == NULL)
@@ -101,6 +172,12 @@ void put(int key, char *value)
         return;
     }
     newHashNode->storedDataPtr = insertInCache(key, value);
+    if (newHashNode->storedDataPtr == NULL)
+    {
+        printf("\nMemory allocation failed.");
+        return;
+    }
+
     newHashNode->next = hashTable[index];
     hashTable[index] = newHashNode;
 }
