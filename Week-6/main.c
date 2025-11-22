@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 #define INPUT_SIZE 500
+int cacheInitialized = 0;
 
 void takeInput(char *);
 int checkInput(char *);
@@ -35,42 +36,89 @@ void takeInput(char *line)
     char *function = strtok(line, " \n");
     char *arg1 = strtok(NULL, " \n");
     char *arg2 = NULL;
-    char *extraArguments = NULL;
-    if (function != NULL && strcmp(function, "put") == 0)
+    if (function == NULL)
     {
-        if (arg1 != NULL)
-        {
-            arg2 = strtok(NULL, " \n");
-        }
+        return;
     }
-    extraArguments = strtok(NULL, " \n");
-    if (function != NULL)
-    {
-        if (extraArguments != NULL)
-        {
-            printf("\nToo many arguments given.");
-            return;
-        }
 
+    if (strcmp(function, "put") == 0 && arg1 != NULL)
+    {
+        arg2 = strtok(NULL, " \n");
+    }
+
+    if (strtok(NULL, " \n") != NULL)
+    {
+        printf("\nToo many arguments given.");
+        return;
+    }
+
+    if (cacheInitialized == 0)
+    {
         if (strcmp(function, "createCache") == 0)
         {
-            if (arg1 && checkInput(arg1))
+            if (arg1 == NULL)
+            {
+                printf("\ncreateCache needs <size> input.");
+                return;
+            }
+            else if (checkInput(arg1))
             {
                 createCache(atoi(arg1));
             }
+            else
+            {
+                printf("\nError. Enter a number");
+                return;
+            }
+        }
+        else
+        {
+            printf("\nError. Cache not initialized.");
+            return;
+        }
+    }
+    else // cache initialized!
+    {
+        if (strcmp(function, "createCache") == 0)
+        {
+            printf("Error. Cache already initialized");
+            return;
         }
         else if (strcmp(function, "get") == 0)
         {
-            if (arg1 && checkInput(arg1))
+            if (arg1 == NULL)
+            {
+                printf("\nget needs <key> input.");
+                return;
+            }
+            else if (checkInput(arg1))
             {
                 get(atoi(arg1));
+            }
+            else
+            {
+                printf("\nError. Enter a number");
+                return;
             }
         }
         else if (strcmp(function, "put") == 0)
         {
-            if (arg1 && arg2 && checkInput(arg1))
+            if (arg1 && arg2)
             {
-                put(atoi(arg1), arg2);
+                if (checkInput(arg1))
+                {
+                    put(atoi(arg1), arg2);
+                }
+                else
+                {
+                    printf("\nError. Enter a number for key");
+                    return;
+                }
+            }
+            else
+            {
+                printf("\nput needs <key> and <value> input.");
+                return;
             }
         }
         else
@@ -87,7 +135,6 @@ int checkInput(char *string)
     {
         if (!isdigit(*temp))
         {
-            printf("\nError. Enter a number");
             return 0;
         }
         temp += 1;
@@ -110,6 +157,7 @@ void createCache(int size)
         printf("\nMemory allocation failed.");
         return;
     }
+    cacheInitialized = 1;
 }
 
 void get(int key)
