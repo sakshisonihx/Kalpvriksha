@@ -22,12 +22,13 @@ typedef struct HashNode
     struct HashNode *next;
 } HashNode;
 
-extern HashNode *hashTable;
+extern HashNode **hashTable;
 extern Queue LRUCache;
 extern int LRUCapacity;
 
 // hash table manipulation functions
 int getHashIndex(int);
+void removeFromHashTable(int);
 
 // queue manipulation functions
 DataElement *insertInCache(int, char *);

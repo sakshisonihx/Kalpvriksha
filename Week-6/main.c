@@ -33,7 +33,7 @@ void clearBuffer()
 void createCache(int size)
 {
     LRUCapacity = size;
-    hashTable = (HashNode *)calloc(size, sizeof(HashNode));
+    hashTable = (HashNode **)calloc(size, sizeof(HashNode *));
     if (hashTable == NULL)
     {
         printf("\nMemory allocation failed.");
@@ -49,10 +49,11 @@ void put(int key, char *value)
 {
     if (LRUCache.totalElements == LRUCapacity)
     {
+        removeFromHashTable(LRUCache.rear->key);
         removeFromCache();
     }
     int index = getHashIndex(key);
-    HashNode *currentHashNode = &hashTable[index];
+    HashNode *currentHashNode = hashTable[index];
 
     // key present
     int newStringSize = strlen(value);
@@ -79,8 +80,13 @@ void put(int key, char *value)
     }
 
     // key not present
-
-    currentHashNode->storedDataPtr = insertInCache(key, value);
-    currentHashNode->next = NULL;
-    LRUCache.totalElements++;
+    HashNode *newHashNode = (HashNode *)malloc(sizeof(HashNode));
+    if (newHashNode == NULL)
+    {
+        printf("\nMemory allocation failed.");
+        return;
+    }
+    newHashNode->storedDataPtr = insertInCache(key, value);
+    newHashNode->next = hashTable[index];
+    hashTable[index] = newHashNode;
 }

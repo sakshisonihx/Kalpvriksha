@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-HashNode *hashTable = NULL;
+HashNode **hashTable = NULL;
 Queue LRUCache = {.front = NULL, .rear = NULL, .totalElements = 0};
 int LRUCapacity = 0;
 
@@ -69,4 +69,38 @@ void updatePositionInCache(DataElement *cacheNode)
     cacheNode->next = LRUCache.front;
     cacheNode->previous = NULL;
     LRUCache.front = cacheNode;
+}
+
+void removeFromCache()
+{
+    DataElement *deletedElement = LRUCache.rear;
+    LRUCache.rear = deletedElement->previous;
+    LRUCache.rear->next = NULL;
+    free(deletedElement);
+    LRUCache.totalElements--;
+}
+
+void removeFromHashTable(int key)
+{
+    int index = getHashIndex(key);
+    HashNode *currentHashNode = hashTable[index];
+    HashNode *previousNode = NULL;
+    while (currentHashNode != NULL)
+    {
+        if (currentHashNode->storedDataPtr->key == key)
+        {
+            if (previousNode == NULL) // current node is first node
+            {
+                hashTable[index] = hashTable[index]->next;
+            }
+            else
+            {
+                previousNode->next = currentHashNode->next;
+            }
+            free(currentHashNode);
+            return;
+        }
+        previousNode = currentHashNode;
+        currentHashNode = currentHashNode->next;
+    }
 }
