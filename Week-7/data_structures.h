@@ -11,7 +11,7 @@ typedef enum
     TERMINATED
 } State;
 
-typedef struct
+typedef struct ProcessDetails
 {
     int processID;
     char *processName;
@@ -23,42 +23,40 @@ typedef struct
     int completionTime;
     int waitingTime;
     int turnAroundTime;
+    struct ProcessDetails *next;
 } ProcessDetails;
-
-typedef struct QueueNode
-{
-    ProcessDetails processData;
-    struct QueueNode *next;
-    struct QueueNode *previous;
-} QueueNode;
 
 typedef struct
 {
-    QueueNode *front;
-    QueueNode *rear;
+    ProcessDetails *front;
+    ProcessDetails *rear;
 } ReadyQueue;
 
 typedef struct
 {
-    QueueNode *front;
-    QueueNode *rear;
+    ProcessDetails *front;
+    ProcessDetails *rear;
 } WaitingQueue;
 
 typedef struct
 {
-    QueueNode *front;
-    QueueNode *rear;
+    ProcessDetails *front;
+    ProcessDetails *rear;
 } TerminatedQueue;
 
-typedef struct PCBNode
+typedef struct HashNode
 {
-    ProcessDetails processData;
-    struct PCBNode *next;
-} PCBNode;
+    ProcessDetails *processData;
+    struct HashNode *next;
+} HashNode;
 
-extern PCBNode *PCBHash[HASH_MAP_SIZE];
+extern HashNode *PCBHash[HASH_MAP_SIZE];
+extern ReadyQueue readyQueue;
+extern WaitingQueue waitingQueue;
+extern TerminatedQueue terminatedQueue;
 
 // implementation function declaration
-int getHashKey(int key);
+int getHashKey(int);
+void insertInPCB(int, char[], int, int, int);
 
 #endif

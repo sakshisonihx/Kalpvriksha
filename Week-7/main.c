@@ -48,6 +48,7 @@ void readLine(char *line)
         int pid, burstTime, ioTime, ioDuration;
         if (sscanf(line, "%s %d %d %d %d", name, &pid, &burstTime, &ioTime, &ioDuration) == 5)
         {
+            insertInPCB(pid, name, burstTime, ioTime, ioDuration);
             printf("\nProcess detail, pid = %d, name = %s, burstTime = %d, iotime = %d, ioDuration = %d", pid, name, burstTime, ioTime, ioDuration);
         }
         else
