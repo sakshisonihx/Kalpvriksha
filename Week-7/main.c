@@ -35,6 +35,7 @@ void readLine(char *line)
         int pid, killTime;
         if (sscanf(line, "KILL %d %d", &pid, &killTime) == 2)
         {
+            updateKillTime(pid, killTime);
             printf("\nKILL command, pid = %d, kill time = %d", pid, killTime);
         }
         else

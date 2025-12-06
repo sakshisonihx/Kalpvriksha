@@ -23,6 +23,7 @@ typedef struct ProcessDetails
     int completionTime;
     int waitingTime;
     int turnAroundTime;
+    int killTime;
     struct ProcessDetails *next;
 } ProcessDetails;
 
@@ -58,5 +59,6 @@ extern TerminatedQueue terminatedQueue;
 // implementation function declaration
 int getHashKey(int);
 void insertInPCB(int, char[], int, int, int);
+void updateKillTime(int, int);
 
 #endif

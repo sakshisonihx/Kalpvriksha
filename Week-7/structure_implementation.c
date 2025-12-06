@@ -30,6 +30,7 @@ void insertInPCB(int pid, char pname[], int burstTime, int ioTime, int ioDuratio
     newProcess->processState = READY;
     newProcess->turnAroundTime = -1;
     newProcess->waitingTime = -1;
+    newProcess->killTime = -1;
     newProcess->next = NULL;
 
     if (readyQueue.rear == NULL)
@@ -54,4 +55,20 @@ void insertInPCB(int pid, char pname[], int burstTime, int ioTime, int ioDuratio
     int hashIndex = getHashKey(pid);
     newHashNode->next = PCBHash[hashIndex];
     PCBHash[hashIndex] = newHashNode;
+}
+
+void updateKillTime(int pid, int time)
+{
+    int hashIndex = getHashKey(pid);
+    HashNode *currentHashNode = PCBHash[hashIndex];
+    while (currentHashNode != NULL)
+    {
+        if (currentHashNode->processData->processID == pid)
+        {
+            currentHashNode->processData->killTime = time;
+            return;
+        }
+        currentHashNode = currentHashNode->next;
+    }
+    printf("\nError. Process with specified PID not found");
 }
