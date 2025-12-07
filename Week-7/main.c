@@ -196,6 +196,7 @@ void checkKillProcess()
                     currentProcess->next = currentProcess->previous = NULL;
                     currentProcess->processState = TERMINATED;
                     currentProcess->waitingTime = currentProcess->turnAroundTime = -1;
+                    currentProcess->killTime = temp->killTime;
 
                     // entering process in terminated queue
                     enqueueInQueue(&terminatedQueue.front, &terminatedQueue.rear, currentProcess);
@@ -243,7 +244,7 @@ void executeCurrentProcess(ProcessDetails *currentProcess)
         // done so that when waiting time is incremented for processes in waiting queue, this process that just entered waiting queue does not have its waiting time incremented for same tick.
         currentProcess->waitingTime--;
         currentProcess->processState = WAITING;
-        currentProcess->ioRemainingTime = currentProcess->ioDuration;
+        currentProcess->ioRemainingTime = currentProcess->ioDuration + 1;
         enqueueInQueue(&waitingQueue.front, &waitingQueue.rear, currentProcess);
     }
 }
@@ -268,7 +269,7 @@ void increaseWaitingTime()
             temp->ioRemainingTime--;
 
             ProcessDetails *nextProcess = temp->next;
-            if (temp->ioRemainingTime <= 0)
+            if (temp->ioRemainingTime == 0)
             {
                 temp->processState = READY;
                 temp->ioRemainingTime = temp->ioDuration;
@@ -300,15 +301,73 @@ void increaseWaitingTime()
 void printOutput()
 {
     if (terminatedQueue.front == NULL)
-    {
         return;
-    }
-    printf("\n| %-6s | %-15s | %-6s | %-6s | %-15s | %-15s |", "PID", "Name", "CPU", "IO", "Turnaround", "Waiting");
+
+    int count = 0;
     ProcessDetails *temp = terminatedQueue.front;
+    int anyKilled = 0;
     while (temp != NULL)
     {
-        printf("\n| %-6d | %-15s | %-6d | %-6d | %-15d | %-15d |", temp->processID, temp->processName,
-               temp->burstTime, temp->ioDuration, temp->turnAroundTime, temp->waitingTime);
+        count++;
+        if (temp->killTime != -1)
+            anyKilled = 1;
         temp = temp->next;
     }
+
+    ProcessDetails **arr = malloc(count * sizeof(ProcessDetails *));
+    temp = terminatedQueue.front;
+    int i = 0;
+    while (temp != NULL)
+    {
+        arr[i++] = temp;
+        temp = temp->next;
+    }
+
+    for (int a = 0; a < count - 1; a++)
+    {
+        for (int b = a + 1; b < count; b++)
+        {
+            if (arr[a]->processID > arr[b]->processID)
+            {
+                ProcessDetails *swap = arr[a];
+                arr[a] = arr[b];
+                arr[b] = swap;
+            }
+        }
+    }
+
+    if (anyKilled)
+        printf("\n| %-6s | %-15s | %-6s | %-6s | %-12s | %-15s | %-15s |",
+               "PID", "Name", "CPU", "IO", "Status", "Turnaround", "Waiting");
+    else
+        printf("\n| %-6s | %-15s | %-6s | %-6s | %-15s | %-15s |",
+               "PID", "Name", "CPU", "IO", "Turnaround", "Waiting");
+
+    for (int x = 0; x < count; x++)
+    {
+        ProcessDetails *p = arr[x];
+
+        if (anyKilled)
+        {
+            if (p->killTime != -1)
+            {
+                printf("\n| %-6d | %-15s | %-6d | %-6d | %-9s %-2d | %-15s | %-15s |",
+                       p->processID, p->processName, p->burstTime, p->ioDuration,
+                       "KILLED at", p->killTime, "-", "-");
+            }
+            else
+            {
+                printf("\n| %-6d | %-15s | %-6d | %-6d | %-12s | %-15d | %-15d |",
+                       p->processID, p->processName, p->burstTime, p->ioDuration,
+                       "OK", p->turnAroundTime, p->waitingTime);
+            }
+        }
+        else
+        {
+            printf("\n| %-6d | %-15s | %-6d | %-6d | %-15d | %-15d |",
+                   p->processID, p->processName, p->burstTime,
+                   p->ioDuration, p->turnAroundTime, p->waitingTime);
+        }
+    }
+    free(arr);
 }

@@ -34,6 +34,7 @@ void insertInPCB(int pid, char *pname, int burstTime, int ioTime, int ioDuration
     newProcess->waitingTime = 0;
     newProcess->runningTime = 0;
     newProcess->ioRemainingTime = 0;
+    newProcess->killTime = -1;
     newProcess->next = NULL;
     newProcess->previous = NULL;
 
