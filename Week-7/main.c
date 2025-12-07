@@ -10,6 +10,7 @@ int processIsRunning = 0;
 void readLine(char *);
 void beginExecution();
 void executeCurrentProcess(ProcessDetails *);
+void increaseWaitingTime();
 
 int main()
 {
@@ -80,6 +81,7 @@ void beginExecution()
             currentProcess->next = NULL;
         }
         executeCurrentProcess(currentProcess);
+        increaseWaitingTime();
         systemClock++;
     }
 }
@@ -213,4 +215,54 @@ void executeCurrentProcess(ProcessDetails *currentProcess)
         }
     }
     currentProcess->runningTime++;
+}
+
+void increaseWaitingTime()
+{
+    if (waitingQueue.front != NULL)
+    {
+        ProcessDetails *temp = waitingQueue.front;
+        while (temp != NULL)
+        {
+            temp->waitingTime++;
+            temp->ioRemainingTime--;
+
+            if (temp->ioRemainingTime == 0)
+            {
+                temp->processState = READY;
+                if (temp->previous)
+                {
+                    temp->previous->next = temp->next;
+                }
+                if (temp->next)
+                {
+                    temp->next->previous = temp->previous;
+                }
+                temp->next = NULL;
+                if (readyQueue.front == NULL)
+                {
+                    readyQueue.front = temp;
+                    readyQueue.rear = temp;
+                    temp->previous = NULL;
+                }
+                else
+                {
+                    readyQueue.rear->next = temp;
+                    temp->previous = readyQueue.rear;
+                    readyQueue.rear = temp;
+                }
+            }
+            temp = temp->next;
+        }
+    }
+
+    if (readyQueue.front != NULL)
+    {
+        ProcessDetails *temp = readyQueue.front;
+        while (temp != NULL)
+        {
+            temp->waitingTime++;
+            temp = temp->next;
+        }
+    }
 }
