@@ -124,3 +124,19 @@ void updateKillTime(int pid, int time)
         return;
     }
 }
+
+void enqueueInQueue(ProcessDetails *qFront, ProcessDetails *qRear, ProcessDetails *process)
+{
+    if (qRear == NULL)
+    {
+        qRear = process;
+        qFront = process;
+        process->previous = NULL;
+    }
+    else
+    {
+        qRear->next = process;
+        process->previous = qRear;
+        qRear = process;
+    }
+}

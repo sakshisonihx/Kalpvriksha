@@ -143,17 +143,7 @@ void checkKillProcess()
                     currentProcess->processState = TERMINATED;
 
                     // entering process in terminated queue
-                    if (terminatedQueue.rear == NULL)
-                    {
-                        terminatedQueue.rear = currentProcess;
-                        terminatedQueue.front = currentProcess;
-                    }
-                    else
-                    {
-                        terminatedQueue.rear->next = currentProcess;
-                        currentProcess->previous = terminatedQueue.rear;
-                        terminatedQueue.rear = currentProcess;
-                    }
+                    enqueueInQueue(terminatedQueue.front, terminatedQueue.rear, currentProcess);
                     break;
                 }
                 currentNode = currentNode->next;
@@ -184,18 +174,7 @@ void executeCurrentProcess(ProcessDetails *currentProcess)
         currentProcess->completionTime = systemClock;
         currentProcess->turnAroundTime = currentProcess->completionTime -
                                          currentProcess->arrivalTime;
-        if (terminatedQueue.front == NULL)
-        {
-            terminatedQueue.front = currentProcess;
-            terminatedQueue.rear = currentProcess;
-            currentProcess->previous = NULL;
-        }
-        else
-        {
-            terminatedQueue.rear->next = currentProcess;
-            currentProcess->previous = terminatedQueue.rear;
-            terminatedQueue.rear = currentProcess;
-        }
+        enqueueInQueue(terminatedQueue.front, terminatedQueue.rear, currentProcess);
         return;
     }
 
@@ -203,18 +182,7 @@ void executeCurrentProcess(ProcessDetails *currentProcess)
     {
         processIsRunning = 0;
         currentProcess->processState = WAITING;
-        if (waitingQueue.front == NULL)
-        {
-            waitingQueue.front = currentProcess;
-            waitingQueue.rear = currentProcess;
-            currentProcess->previous = NULL;
-        }
-        else
-        {
-            waitingQueue.rear->next = currentProcess;
-            currentProcess->previous = waitingQueue.rear;
-            waitingQueue.rear = currentProcess;
-        }
+        enqueueInQueue(waitingQueue.front, waitingQueue.rear, currentProcess);
     }
     currentProcess->runningTime++;
 }
@@ -241,18 +209,7 @@ void increaseWaitingTime()
                     temp->next->previous = temp->previous;
                 }
                 temp->next = NULL;
-                if (readyQueue.front == NULL)
-                {
-                    readyQueue.front = temp;
-                    readyQueue.rear = temp;
-                    temp->previous = NULL;
-                }
-                else
-                {
-                    readyQueue.rear->next = temp;
-                    temp->previous = readyQueue.rear;
-                    readyQueue.rear = temp;
-                }
+                enqueueInQueue(readyQueue.front, readyQueue.rear, temp);
             }
             temp = temp->next;
         }
