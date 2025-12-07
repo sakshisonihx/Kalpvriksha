@@ -73,8 +73,11 @@ void beginExecution()
     ProcessDetails *currentProcess = NULL;
     while (readyQueue.front != NULL || waitingQueue.front != NULL || processIsRunning)
     {
-        systemClock++;
         checkKillProcess();
+        if (currentProcess != NULL && currentProcess->processState == TERMINATED)
+        {
+            currentProcess = NULL;
+        }
         if (!processIsRunning && readyQueue.front != NULL)
         {
             currentProcess = readyQueue.front;
@@ -83,6 +86,10 @@ void beginExecution()
             if (readyQueue.front == NULL)
             {
                 readyQueue.rear = NULL;
+            }
+            else
+            {
+                readyQueue.front->previous = NULL;
             }
             currentProcess->processState = RUNNING;
             currentProcess->next = NULL;
@@ -97,6 +104,7 @@ void beginExecution()
             }
         }
         increaseWaitingTime();
+        systemClock++;
     }
 }
 
@@ -111,6 +119,7 @@ void checkKillProcess()
     KilledProcess *temp = killedProcessListHead;
     while (temp != NULL)
     {
+        KilledProcess *nextProcess = temp->next;
         if (temp->killTime == systemClock)
         {
             int hashIndex = getHashKey(temp->pid);
@@ -121,7 +130,7 @@ void checkKillProcess()
                 if (currentNode->processData->processID == temp->pid)
                 {
                     ProcessDetails *currentProcess = currentNode->processData;
-                    currentProcess->completionTime = systemClock;
+                    currentProcess->completionTime = systemClock + 1;
 
                     // removing process from queues
                     if (currentProcess->processState == RUNNING)
@@ -186,6 +195,7 @@ void checkKillProcess()
                     }
                     currentProcess->next = currentProcess->previous = NULL;
                     currentProcess->processState = TERMINATED;
+                    currentProcess->waitingTime = currentProcess->turnAroundTime = -1;
 
                     // entering process in terminated queue
                     enqueueInQueue(&terminatedQueue.front, &terminatedQueue.rear, currentProcess);
@@ -193,52 +203,48 @@ void checkKillProcess()
                 }
                 currentNode = currentNode->next;
             }
-        }
+            // removing process from kill list
+            if (temp->previous)
+            {
+                temp->previous->next = temp->next;
+            }
+            else
+            {
+                killedProcessListHead = temp->next;
+            }
+            if (temp->next)
+            {
+                temp->next->previous = temp->previous;
+            }
 
-        // removing process from kill list
-        KilledProcess *nextProcess = temp->next;
-        if (temp->previous)
-        {
-            temp->previous->next = temp->next;
+            free(temp);
         }
-        else
-        {
-            killedProcessListHead = temp->next;
-        }
-        if (temp->next)
-        {
-            temp->next->previous = temp->previous;
-        }
-
-        free(temp);
         temp = nextProcess;
     }
 }
 
 void executeCurrentProcess(ProcessDetails *currentProcess)
 {
-    if (currentProcess->runningTime + 1 == currentProcess->burstTime)
+    currentProcess->runningTime++;
+    if (currentProcess->runningTime == currentProcess->burstTime)
     {
         processIsRunning = 0;
         currentProcess->processState = TERMINATED;
-        currentProcess->completionTime = systemClock;
+        currentProcess->completionTime = systemClock + 1;
         currentProcess->turnAroundTime = currentProcess->completionTime -
                                          currentProcess->arrivalTime;
         enqueueInQueue(&terminatedQueue.front, &terminatedQueue.rear, currentProcess);
         return;
     }
 
-    if (currentProcess->runningTime + 1 == currentProcess->ioStartTime)
+    if (currentProcess->runningTime == currentProcess->ioStartTime)
     {
         processIsRunning = 0;
+        // done so that when waiting time is incremented for processes in waiting queue, this process that just entered waiting queue does not have its waiting time incremented for same tick.
+        currentProcess->waitingTime--;
         currentProcess->processState = WAITING;
         currentProcess->ioRemainingTime = currentProcess->ioDuration;
-        currentProcess->runningTime++;
         enqueueInQueue(&waitingQueue.front, &waitingQueue.rear, currentProcess);
-    }
-    else
-    {
-        currentProcess->runningTime++;
     }
 }
 
@@ -266,22 +272,22 @@ void increaseWaitingTime()
             {
                 temp->processState = READY;
                 temp->ioRemainingTime = temp->ioDuration;
-                if (temp == waitingQueue.front)
-                {
-                    waitingQueue.front = temp->next;
-                }
-                if (temp == waitingQueue.rear)
-                {
-                    waitingQueue.rear = temp->previous;
-                }
-
                 if (temp->previous)
                 {
                     temp->previous->next = temp->next;
                 }
+                else
+                {
+                    waitingQueue.front = temp->next;
+                }
+
                 if (temp->next)
                 {
                     temp->next->previous = temp->previous;
+                }
+                else
+                {
+                    waitingQueue.rear = temp->previous;
                 }
                 temp->next = temp->previous = NULL;
                 enqueueInQueue(&readyQueue.front, &readyQueue.rear, temp);
