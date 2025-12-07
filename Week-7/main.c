@@ -4,7 +4,11 @@
 
 #define INPUT_SIZE 100
 
+int systemClock = 0;
+int processIsRunning = 0;
+
 void readLine(char *);
+void executeProcesses();
 
 int main()
 {
@@ -20,6 +24,7 @@ int main()
         }
         readLine(inputBuffer);
     }
+    executeProcesses();
     return 0;
 }
 
@@ -36,7 +41,7 @@ void readLine(char *line)
         if (sscanf(line, "KILL %d %d", &pid, &killTime) == 2)
         {
             updateKillTime(pid, killTime);
-            printf("\nKILL command, pid = %d, kill time = %d", pid, killTime);
+            // printf("\nKILL command, pid = %d, kill time = %d", pid, killTime);
         }
         else
         {
@@ -50,11 +55,18 @@ void readLine(char *line)
         if (sscanf(line, "%s %d %d %d %d", name, &pid, &burstTime, &ioTime, &ioDuration) == 5)
         {
             insertInPCB(pid, name, burstTime, ioTime, ioDuration);
-            printf("\nProcess detail, pid = %d, name = %s, burstTime = %d, iotime = %d, ioDuration = %d", pid, name, burstTime, ioTime, ioDuration);
+            // printf("\nProcess detail, pid = %d, name = %s, burstTime = %d, iotime = %d, ioDuration = %d", pid, name, burstTime, ioTime, ioDuration);
         }
         else
         {
             printf("\nInvalid command");
         }
+    }
+}
+
+void executeProcesses()
+{
+    while (readyQueue.front != NULL || waitingQueue.front != NULL || processIsRunning)
+    {
     }
 }

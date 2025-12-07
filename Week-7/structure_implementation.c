@@ -6,6 +6,8 @@ HashNode *PCBHash[HASH_MAP_SIZE] = {0};
 ReadyQueue readyQueue = {0};
 WaitingQueue waitingQueue = {0};
 TerminatedQueue terminatedQueue = {0};
+int killProcessArray[HASH_MAP_SIZE][2] = {0};
+int killProcessCount = 0;
 
 int getHashKey(int key)
 {
@@ -30,7 +32,7 @@ void insertInPCB(int pid, char pname[], int burstTime, int ioTime, int ioDuratio
     newProcess->processState = READY;
     newProcess->turnAroundTime = -1;
     newProcess->waitingTime = -1;
-    newProcess->killTime = -1;
+    newProcess->runningTime = 0;
     newProcess->next = NULL;
 
     if (readyQueue.rear == NULL)
@@ -59,16 +61,40 @@ void insertInPCB(int pid, char pname[], int burstTime, int ioTime, int ioDuratio
 
 void updateKillTime(int pid, int time)
 {
-    int hashIndex = getHashKey(pid);
-    HashNode *currentHashNode = PCBHash[hashIndex];
+    int hashKey = getHashKey(pid);
+    HashNode *currentHashNode = PCBHash[hashKey];
+    int processExists = 0;
     while (currentHashNode != NULL)
     {
         if (currentHashNode->processData->processID == pid)
         {
-            currentHashNode->processData->killTime = time;
-            return;
+            processExists = 1;
+            break;
         }
         currentHashNode = currentHashNode->next;
     }
-    printf("\nError. Process with specified PID not found");
+    if (processExists)
+    {
+        int found = 0;
+        for (int i = 0; i < killProcessCount; i++)
+        {
+            if (killProcessArray[i][0] == pid)
+            {
+                killProcessArray[i][1] = time;
+                found = 1;
+                break;
+            }
+        }
+        if (killProcessCount == 0 || !found)
+        {
+            killProcessArray[killProcessCount][0] = pid;
+            killProcessArray[killProcessCount][1] = time;
+            killProcessCount++;
+        }
+    }
+    else
+    {
+        printf("\nError. Process with specified PID not found");
+        return;
+    }
 }
