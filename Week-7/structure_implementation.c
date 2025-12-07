@@ -6,8 +6,7 @@ HashNode *PCBHash[HASH_MAP_SIZE] = {0};
 ReadyQueue readyQueue = {0};
 WaitingQueue waitingQueue = {0};
 TerminatedQueue terminatedQueue = {0};
-int killProcessArray[HASH_MAP_SIZE][2] = {0};
-int killProcessCount = 0;
+KilledProcess *killedProcessListHead = NULL;
 
 int getHashKey(int key)
 {
@@ -34,6 +33,7 @@ void insertInPCB(int pid, char pname[], int burstTime, int ioTime, int ioDuratio
     newProcess->waitingTime = -1;
     newProcess->runningTime = 0;
     newProcess->next = NULL;
+    newProcess->previous = NULL;
 
     if (readyQueue.rear == NULL)
     {
@@ -43,6 +43,7 @@ void insertInPCB(int pid, char pname[], int burstTime, int ioTime, int ioDuratio
     else
     {
         readyQueue.rear->next = newProcess;
+        newProcess->previous = readyQueue.rear;
         readyQueue.rear = newProcess;
     }
 
@@ -75,21 +76,44 @@ void updateKillTime(int pid, int time)
     }
     if (processExists)
     {
-        int found = 0;
-        for (int i = 0; i < killProcessCount; i++)
+        if (killedProcessListHead == NULL)
         {
-            if (killProcessArray[i][0] == pid)
+            KilledProcess *newKilledProcess = (KilledProcess *)malloc(sizeof(KilledProcess));
+            if (newKilledProcess == NULL)
             {
-                killProcessArray[i][1] = time;
-                found = 1;
+                printf("\nMemory allocation failed");
+                return;
+            }
+            newKilledProcess->pid = pid;
+            newKilledProcess->killTime = time;
+            newKilledProcess->next = NULL;
+            newKilledProcess->previous = NULL;
+            return;
+        }
+
+        KilledProcess *temp = killedProcessListHead;
+        while (temp != NULL)
+        {
+            if (temp->pid == pid)
+            {
+                temp->killTime = time;
                 break;
             }
+            temp = temp->next;
         }
-        if (killProcessCount == 0 || !found)
+        if (temp == NULL)
         {
-            killProcessArray[killProcessCount][0] = pid;
-            killProcessArray[killProcessCount][1] = time;
-            killProcessCount++;
+            KilledProcess *newKilledProcess = (KilledProcess *)malloc(sizeof(KilledProcess));
+            if (newKilledProcess == NULL)
+            {
+                printf("\nMemory allocation failed");
+                return;
+            }
+            newKilledProcess->pid = pid;
+            newKilledProcess->killTime = time;
+            temp->previous->next = newKilledProcess;
+            newKilledProcess->previous = temp;
+            newKilledProcess->next = NULL;
         }
     }
     else

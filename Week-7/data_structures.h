@@ -25,6 +25,7 @@ typedef struct ProcessDetails
     int turnAroundTime;
     int runningTime;
     struct ProcessDetails *next;
+    struct ProcessDetails *previous;
 } ProcessDetails;
 
 typedef struct
@@ -51,12 +52,19 @@ typedef struct HashNode
     struct HashNode *next;
 } HashNode;
 
+typedef struct KilledProcess
+{
+    int pid;
+    int killTime;
+    struct KilledProcess *next;
+    struct KilledProcess *previous;
+} KilledProcess;
+
 extern HashNode *PCBHash[HASH_MAP_SIZE];
 extern ReadyQueue readyQueue;
 extern WaitingQueue waitingQueue;
 extern TerminatedQueue terminatedQueue;
-extern int killProcessArray[HASH_MAP_SIZE][2];
-extern int killProcessCount;
+extern KilledProcess *KilledProcessListHead;
 
 // implementation function declaration
 int getHashKey(int);
