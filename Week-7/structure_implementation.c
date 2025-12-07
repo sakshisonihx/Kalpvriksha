@@ -28,12 +28,12 @@ void insertInPCB(int pid, char *pname, int burstTime, int ioTime, int ioDuration
     newProcess->ioDuration = ioDuration;
     newProcess->ioStartTime = ioTime;
     newProcess->arrivalTime = 0;
-    newProcess->completionTime = -1;
+    newProcess->completionTime = 0;
     newProcess->processState = READY;
-    newProcess->turnAroundTime = -1;
-    newProcess->waitingTime = -1;
+    newProcess->turnAroundTime = 0;
+    newProcess->waitingTime = 0;
     newProcess->runningTime = 0;
-    newProcess->ioRemainingTime = ioDuration;
+    newProcess->ioRemainingTime = 0;
     newProcess->next = NULL;
     newProcess->previous = NULL;
 
@@ -142,4 +142,5 @@ void enqueueInQueue(ProcessDetails **qFront, ProcessDetails **qRear, ProcessDeta
         process->previous = *qRear;
         *qRear = process;
     }
+    process->next = NULL;
 }

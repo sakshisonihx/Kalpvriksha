@@ -73,18 +73,30 @@ void beginExecution()
     ProcessDetails *currentProcess = NULL;
     while (readyQueue.front != NULL || waitingQueue.front != NULL || processIsRunning)
     {
+        systemClock++;
         checkKillProcess();
         if (!processIsRunning && readyQueue.front != NULL)
         {
             currentProcess = readyQueue.front;
             processIsRunning = 1;
             readyQueue.front = currentProcess->next;
+            if (readyQueue.front == NULL)
+            {
+                readyQueue.rear = NULL;
+            }
             currentProcess->processState = RUNNING;
             currentProcess->next = NULL;
+            currentProcess->previous = NULL;
         }
-        executeCurrentProcess(currentProcess);
+        if (processIsRunning && currentProcess != NULL)
+        {
+            executeCurrentProcess(currentProcess);
+            if (!processIsRunning)
+            {
+                currentProcess = NULL;
+            }
+        }
         increaseWaitingTime();
-        systemClock++;
     }
 }
 
@@ -109,7 +121,6 @@ void checkKillProcess()
                 if (currentNode->processData->processID == temp->pid)
                 {
                     ProcessDetails *currentProcess = currentNode->processData;
-                    currentProcess->processState = TERMINATED;
                     currentProcess->completionTime = systemClock;
 
                     // removing process from queues
@@ -174,6 +185,7 @@ void checkKillProcess()
                         }
                     }
                     currentProcess->next = currentProcess->previous = NULL;
+                    currentProcess->processState = TERMINATED;
 
                     // entering process in terminated queue
                     enqueueInQueue(&terminatedQueue.front, &terminatedQueue.rear, currentProcess);
@@ -205,7 +217,7 @@ void checkKillProcess()
 
 void executeCurrentProcess(ProcessDetails *currentProcess)
 {
-    if (currentProcess->runningTime == currentProcess->burstTime)
+    if (currentProcess->runningTime + 1 == currentProcess->burstTime)
     {
         processIsRunning = 0;
         currentProcess->processState = TERMINATED;
@@ -216,17 +228,31 @@ void executeCurrentProcess(ProcessDetails *currentProcess)
         return;
     }
 
-    if (currentProcess->runningTime == currentProcess->ioStartTime)
+    if (currentProcess->runningTime + 1 == currentProcess->ioStartTime)
     {
         processIsRunning = 0;
         currentProcess->processState = WAITING;
+        currentProcess->ioRemainingTime = currentProcess->ioDuration;
+        currentProcess->runningTime++;
         enqueueInQueue(&waitingQueue.front, &waitingQueue.rear, currentProcess);
     }
-    currentProcess->runningTime++;
+    else
+    {
+        currentProcess->runningTime++;
+    }
 }
 
 void increaseWaitingTime()
 {
+    if (readyQueue.front != NULL)
+    {
+        ProcessDetails *temp = readyQueue.front;
+        while (temp != NULL)
+        {
+            temp->waitingTime++;
+            temp = temp->next;
+        }
+    }
     if (waitingQueue.front != NULL)
     {
         ProcessDetails *temp = waitingQueue.front;
@@ -235,9 +261,20 @@ void increaseWaitingTime()
             temp->waitingTime++;
             temp->ioRemainingTime--;
 
-            if (temp->ioRemainingTime == 0)
+            ProcessDetails *nextProcess = temp->next;
+            if (temp->ioRemainingTime <= 0)
             {
                 temp->processState = READY;
+                temp->ioRemainingTime = temp->ioDuration;
+                if (temp == waitingQueue.front)
+                {
+                    waitingQueue.front = temp->next;
+                }
+                if (temp == waitingQueue.rear)
+                {
+                    waitingQueue.rear = temp->previous;
+                }
+
                 if (temp->previous)
                 {
                     temp->previous->next = temp->next;
@@ -246,20 +283,10 @@ void increaseWaitingTime()
                 {
                     temp->next->previous = temp->previous;
                 }
-                temp->next = NULL;
+                temp->next = temp->previous = NULL;
                 enqueueInQueue(&readyQueue.front, &readyQueue.rear, temp);
             }
-            temp = temp->next;
-        }
-    }
-
-    if (readyQueue.front != NULL)
-    {
-        ProcessDetails *temp = readyQueue.front;
-        while (temp != NULL)
-        {
-            temp->waitingTime++;
-            temp = temp->next;
+            temp = nextProcess;
         }
     }
 }
@@ -270,11 +297,11 @@ void printOutput()
     {
         return;
     }
-    printf("\n| %-6d | %-15s | %-6d | %-6d | %-6d | %-6d |", "PID", "Name", "CPU", "IO", "Turnaround", "Waiting");
+    printf("\n| %-6s | %-15s | %-6s | %-6s | %-15s | %-15s |", "PID", "Name", "CPU", "IO", "Turnaround", "Waiting");
     ProcessDetails *temp = terminatedQueue.front;
     while (temp != NULL)
     {
-        printf("\n| %-6d | %-15s | %-6d | %-6d | %-6d | %-6d |", temp->processID, temp->processName,
+        printf("\n| %-6d | %-15s | %-6d | %-6d | %-15d | %-15d |", temp->processID, temp->processName,
                temp->burstTime, temp->ioDuration, temp->turnAroundTime, temp->waitingTime);
         temp = temp->next;
     }
