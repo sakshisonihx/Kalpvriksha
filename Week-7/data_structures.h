@@ -71,6 +71,6 @@ extern KilledProcess *killedProcessListHead;
 int getHashKey(int);
 void insertInPCB(int, char *, int, int, int);
 void updateKillTime(int, int);
-void enqueueInQueue(ProcessDetails *, ProcessDetails *, ProcessDetails *);
+void enqueueInQueue(ProcessDetails **, ProcessDetails **, ProcessDetails *);
 
 #endif

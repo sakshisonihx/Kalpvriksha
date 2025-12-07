@@ -22,7 +22,7 @@ void insertInPCB(int pid, char *pname, int burstTime, int ioTime, int ioDuration
         printf("\nMemory allocation failed");
     }
     newProcess->processID = pid;
-    newProcess->processName = calloc(strlen(pname), sizeof(char));
+    newProcess->processName = calloc(strlen(pname) + 1, sizeof(char));
     strcpy(newProcess->processName, pname);
     newProcess->burstTime = burstTime;
     newProcess->ioDuration = ioDuration;
@@ -90,6 +90,7 @@ void updateKillTime(int pid, int time)
             newKilledProcess->killTime = time;
             newKilledProcess->next = NULL;
             newKilledProcess->previous = NULL;
+            killedProcessListHead = newKilledProcess;
             return;
         }
 
@@ -125,18 +126,18 @@ void updateKillTime(int pid, int time)
     }
 }
 
-void enqueueInQueue(ProcessDetails *qFront, ProcessDetails *qRear, ProcessDetails *process)
+void enqueueInQueue(ProcessDetails **qFront, ProcessDetails **qRear, ProcessDetails *process)
 {
-    if (qRear == NULL)
+    if (*qRear == NULL)
     {
-        qRear = process;
-        qFront = process;
+        *qRear = process;
+        *qFront = process;
         process->previous = NULL;
     }
     else
     {
-        qRear->next = process;
-        process->previous = qRear;
-        qRear = process;
+        (*qRear)->next = process;
+        process->previous = *qRear;
+        *qRear = process;
     }
 }

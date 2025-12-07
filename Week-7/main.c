@@ -143,7 +143,7 @@ void checkKillProcess()
                     currentProcess->processState = TERMINATED;
 
                     // entering process in terminated queue
-                    enqueueInQueue(terminatedQueue.front, terminatedQueue.rear, currentProcess);
+                    enqueueInQueue(&terminatedQueue.front, &terminatedQueue.rear, currentProcess);
                     break;
                 }
                 currentNode = currentNode->next;
@@ -174,7 +174,7 @@ void executeCurrentProcess(ProcessDetails *currentProcess)
         currentProcess->completionTime = systemClock;
         currentProcess->turnAroundTime = currentProcess->completionTime -
                                          currentProcess->arrivalTime;
-        enqueueInQueue(terminatedQueue.front, terminatedQueue.rear, currentProcess);
+        enqueueInQueue(&terminatedQueue.front, &terminatedQueue.rear, currentProcess);
         return;
     }
 
@@ -182,7 +182,7 @@ void executeCurrentProcess(ProcessDetails *currentProcess)
     {
         processIsRunning = 0;
         currentProcess->processState = WAITING;
-        enqueueInQueue(waitingQueue.front, waitingQueue.rear, currentProcess);
+        enqueueInQueue(&waitingQueue.front, &waitingQueue.rear, currentProcess);
     }
     currentProcess->runningTime++;
 }
@@ -209,7 +209,7 @@ void increaseWaitingTime()
                     temp->next->previous = temp->previous;
                 }
                 temp->next = NULL;
-                enqueueInQueue(readyQueue.front, readyQueue.rear, temp);
+                enqueueInQueue(&readyQueue.front, &readyQueue.rear, temp);
             }
             temp = temp->next;
         }
