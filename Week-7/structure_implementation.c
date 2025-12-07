@@ -95,6 +95,7 @@ void updateKillTime(int pid, int time)
         }
 
         KilledProcess *temp = killedProcessListHead;
+        KilledProcess *beforeTemp = NULL;
         while (temp != NULL)
         {
             if (temp->pid == pid)
@@ -102,6 +103,7 @@ void updateKillTime(int pid, int time)
                 temp->killTime = time;
                 break;
             }
+            beforeTemp = temp;
             temp = temp->next;
         }
         if (temp == NULL)
@@ -114,8 +116,8 @@ void updateKillTime(int pid, int time)
             }
             newKilledProcess->pid = pid;
             newKilledProcess->killTime = time;
-            temp->previous->next = newKilledProcess;
-            newKilledProcess->previous = temp;
+            beforeTemp->next = newKilledProcess;
+            newKilledProcess->previous = beforeTemp;
             newKilledProcess->next = NULL;
         }
     }

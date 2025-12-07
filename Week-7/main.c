@@ -109,38 +109,71 @@ void checkKillProcess()
                 if (currentNode->processData->processID == temp->pid)
                 {
                     ProcessDetails *currentProcess = currentNode->processData;
+                    currentProcess->processState = TERMINATED;
                     currentProcess->completionTime = systemClock;
 
                     // removing process from queues
-                    if (readyQueue.front == currentProcess)
-                    {
-                        readyQueue.front = currentProcess->next;
-                    }
-                    else if (readyQueue.rear == currentProcess)
-                    {
-                        readyQueue.rear = currentProcess->previous;
-                    }
-                    else if (waitingQueue.front == currentProcess)
-                    {
-                        waitingQueue.front = currentProcess->next;
-                    }
-                    else if (waitingQueue.rear == currentProcess)
-                    {
-                        waitingQueue.rear = currentProcess->previous;
-                    }
-                    else
-                    {
-                        currentProcess->previous->next = currentProcess->next;
-                        currentProcess->next->previous = currentProcess->previous;
-                    }
-                    currentProcess->next = NULL;
-                    currentProcess->previous = NULL;
                     if (currentProcess->processState == RUNNING)
                     {
                         processIsRunning = 0;
                     }
-
-                    currentProcess->processState = TERMINATED;
+                    else
+                    {
+                        if (readyQueue.front == currentProcess)
+                        {
+                            readyQueue.front = currentProcess->next;
+                            if (readyQueue.front)
+                            {
+                                readyQueue.front->previous = NULL;
+                            }
+                            else
+                            { // queue became empty as the process was last in queue
+                                readyQueue.rear = NULL;
+                            }
+                        }
+                        else if (readyQueue.rear == currentProcess)
+                        {
+                            readyQueue.rear = currentProcess->previous;
+                            if (readyQueue.rear)
+                            {
+                                readyQueue.rear->next = NULL;
+                            }
+                            else
+                            {
+                                readyQueue.front = NULL;
+                            }
+                        }
+                        else if (waitingQueue.front == currentProcess)
+                        {
+                            waitingQueue.front = currentProcess->next;
+                            if (waitingQueue.front)
+                            {
+                                waitingQueue.front->previous = NULL;
+                            }
+                            else
+                            {
+                                waitingQueue.rear = NULL;
+                            }
+                        }
+                        else if (waitingQueue.rear == currentProcess)
+                        {
+                            waitingQueue.rear = currentProcess->previous;
+                            if (waitingQueue.rear)
+                            {
+                                waitingQueue.rear->next = NULL;
+                            }
+                            else
+                            {
+                                waitingQueue.front = NULL;
+                            }
+                        }
+                        else
+                        {
+                            currentProcess->previous->next = currentProcess->next;
+                            currentProcess->next->previous = currentProcess->previous;
+                        }
+                    }
+                    currentProcess->next = currentProcess->previous = NULL;
 
                     // entering process in terminated queue
                     enqueueInQueue(&terminatedQueue.front, &terminatedQueue.rear, currentProcess);
@@ -151,17 +184,22 @@ void checkKillProcess()
         }
 
         // removing process from kill list
+        KilledProcess *nextProcess = temp->next;
         if (temp->previous)
         {
             temp->previous->next = temp->next;
+        }
+        else
+        {
+            killedProcessListHead = temp->next;
         }
         if (temp->next)
         {
             temp->next->previous = temp->previous;
         }
 
-        temp = temp->next;
-        free(temp->previous);
+        free(temp);
+        temp = nextProcess;
     }
 }
 
