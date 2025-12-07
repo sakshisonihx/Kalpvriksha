@@ -8,7 +8,8 @@ int systemClock = 0;
 int processIsRunning = 0;
 
 void readLine(char *);
-void executeProcesses();
+void beginExecution();
+void executeCurrentProcess(ProcessDetails *);
 
 int main()
 {
@@ -24,7 +25,7 @@ int main()
         }
         readLine(inputBuffer);
     }
-    executeProcesses();
+    beginExecution();
     return 0;
 }
 
@@ -64,11 +65,22 @@ void readLine(char *line)
     }
 }
 
-void executeProcesses()
+void beginExecution()
 {
+    ProcessDetails *currentProcess = NULL;
     while (readyQueue.front != NULL || waitingQueue.front != NULL || processIsRunning)
     {
         checkKillProcess();
+        if (!processIsRunning && readyQueue.front != NULL)
+        {
+            currentProcess = readyQueue.front;
+            processIsRunning = 1;
+            readyQueue.front = currentProcess->next;
+            currentProcess->processState = RUNNING;
+            currentProcess->next = NULL;
+        }
+        executeCurrentProcess(currentProcess);
+        systemClock++;
     }
 }
 
@@ -119,6 +131,11 @@ void checkKillProcess()
                     }
                     currentProcess->next = NULL;
                     currentProcess->previous = NULL;
+                    if (currentProcess->processState == RUNNING)
+                    {
+                        processIsRunning = 0;
+                    }
+
                     currentProcess->processState = TERMINATED;
 
                     // entering process in terminated queue
@@ -152,4 +169,48 @@ void checkKillProcess()
         temp = temp->next;
         free(temp->previous);
     }
+}
+
+void executeCurrentProcess(ProcessDetails *currentProcess)
+{
+    if (currentProcess->runningTime == currentProcess->burstTime)
+    {
+        processIsRunning = 0;
+        currentProcess->processState = TERMINATED;
+        currentProcess->completionTime = systemClock;
+        currentProcess->turnAroundTime = currentProcess->completionTime -
+                                         currentProcess->arrivalTime;
+        if (terminatedQueue.front == NULL)
+        {
+            terminatedQueue.front = currentProcess;
+            terminatedQueue.rear = currentProcess;
+            currentProcess->previous = NULL;
+        }
+        else
+        {
+            terminatedQueue.rear->next = currentProcess;
+            currentProcess->previous = terminatedQueue.rear;
+            terminatedQueue.rear = currentProcess;
+        }
+        return;
+    }
+
+    if (currentProcess->runningTime == currentProcess->ioStartTime)
+    {
+        processIsRunning = 0;
+        currentProcess->processState = WAITING;
+        if (waitingQueue.front == NULL)
+        {
+            waitingQueue.front = currentProcess;
+            waitingQueue.rear = currentProcess;
+            currentProcess->previous = NULL;
+        }
+        else
+        {
+            waitingQueue.rear->next = currentProcess;
+            currentProcess->previous = waitingQueue.rear;
+            waitingQueue.rear = currentProcess;
+        }
+    }
+    currentProcess->runningTime++;
 }

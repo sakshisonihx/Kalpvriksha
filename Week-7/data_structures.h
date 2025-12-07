@@ -24,6 +24,7 @@ typedef struct ProcessDetails
     int waitingTime;
     int turnAroundTime;
     int runningTime;
+    int ioRemainingTime;
     struct ProcessDetails *next;
     struct ProcessDetails *previous;
 } ProcessDetails;
