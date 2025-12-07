@@ -65,11 +65,11 @@ extern HashNode *PCBHash[HASH_MAP_SIZE];
 extern ReadyQueue readyQueue;
 extern WaitingQueue waitingQueue;
 extern TerminatedQueue terminatedQueue;
-extern KilledProcess *KilledProcessListHead;
+extern KilledProcess *killedProcessListHead;
 
 // implementation function declaration
 int getHashKey(int);
-void insertInPCB(int, char[], int, int, int);
+void insertInPCB(int, char *, int, int, int);
 void updateKillTime(int, int);
 
 #endif

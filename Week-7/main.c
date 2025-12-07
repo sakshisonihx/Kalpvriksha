@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "data_structures.h"
 
 #define INPUT_SIZE 100
@@ -11,6 +12,8 @@ void readLine(char *);
 void beginExecution();
 void executeCurrentProcess(ProcessDetails *);
 void increaseWaitingTime();
+void checkKillProcess();
+void printOutput();
 
 int main()
 {
@@ -27,6 +30,7 @@ int main()
         readLine(inputBuffer);
     }
     beginExecution();
+    printOutput();
     return 0;
 }
 
@@ -43,7 +47,6 @@ void readLine(char *line)
         if (sscanf(line, "KILL %d %d", &pid, &killTime) == 2)
         {
             updateKillTime(pid, killTime);
-            // printf("\nKILL command, pid = %d, kill time = %d", pid, killTime);
         }
         else
         {
@@ -57,7 +60,6 @@ void readLine(char *line)
         if (sscanf(line, "%s %d %d %d %d", name, &pid, &burstTime, &ioTime, &ioDuration) == 5)
         {
             insertInPCB(pid, name, burstTime, ioTime, ioDuration);
-            // printf("\nProcess detail, pid = %d, name = %s, burstTime = %d, iotime = %d, ioDuration = %d", pid, name, burstTime, ioTime, ioDuration);
         }
         else
         {
@@ -89,12 +91,12 @@ void beginExecution()
 // checking whether any process got killed in current tick
 void checkKillProcess()
 {
-    if (KilledProcessListHead == NULL)
+    if (killedProcessListHead == NULL)
     {
         return;
     }
 
-    KilledProcess *temp = KilledProcessListHead;
+    KilledProcess *temp = killedProcessListHead;
     while (temp != NULL)
     {
         if (temp->killTime == systemClock)
@@ -264,5 +266,21 @@ void increaseWaitingTime()
             temp->waitingTime++;
             temp = temp->next;
         }
+    }
+}
+
+void printOutput()
+{
+    if (terminatedQueue.front == NULL)
+    {
+        return;
+    }
+    printf("\n| %-6d | %-15s | %-6d | %-6d | %-6d | %-6d |", "PID", "Name", "CPU", "IO", "Turnaround", "Waiting");
+    ProcessDetails *temp = terminatedQueue.front;
+    while (temp != NULL)
+    {
+        printf("\n| %-6d | %-15s | %-6d | %-6d | %-6d | %-6d |", temp->processID, temp->processName,
+               temp->burstTime, temp->ioDuration, temp->turnAroundTime, temp->waitingTime);
+        temp = temp->next;
     }
 }

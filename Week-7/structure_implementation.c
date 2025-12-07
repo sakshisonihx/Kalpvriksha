@@ -1,6 +1,7 @@
 #include "data_structures.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 HashNode *PCBHash[HASH_MAP_SIZE] = {0};
 ReadyQueue readyQueue = {0};
@@ -13,7 +14,7 @@ int getHashKey(int key)
     return key % HASH_MAP_SIZE;
 }
 
-void insertInPCB(int pid, char pname[], int burstTime, int ioTime, int ioDuration)
+void insertInPCB(int pid, char *pname, int burstTime, int ioTime, int ioDuration)
 {
     ProcessDetails *newProcess = (ProcessDetails *)malloc(sizeof(ProcessDetails));
     if (!newProcess)
@@ -21,7 +22,7 @@ void insertInPCB(int pid, char pname[], int burstTime, int ioTime, int ioDuratio
         printf("\nMemory allocation failed");
     }
     newProcess->processID = pid;
-    newProcess->processName = calloc(sizeof(pname), sizeof(char));
+    newProcess->processName = calloc(strlen(pname), sizeof(char));
     strcpy(newProcess->processName, pname);
     newProcess->burstTime = burstTime;
     newProcess->ioDuration = ioDuration;
