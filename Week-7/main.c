@@ -68,5 +68,88 @@ void executeProcesses()
 {
     while (readyQueue.front != NULL || waitingQueue.front != NULL || processIsRunning)
     {
+        checkKillProcess();
+    }
+}
+
+// checking whether any process got killed in current tick
+void checkKillProcess()
+{
+    if (KilledProcessListHead == NULL)
+    {
+        return;
+    }
+
+    KilledProcess *temp = KilledProcessListHead;
+    while (temp != NULL)
+    {
+        if (temp->killTime == systemClock)
+        {
+            int hashIndex = getHashKey(temp->pid);
+            HashNode *currentNode = PCBHash[hashIndex];
+            while (currentNode != NULL)
+            {
+                // process found
+                if (currentNode->processData->processID == temp->pid)
+                {
+                    ProcessDetails *currentProcess = currentNode->processData;
+                    currentProcess->completionTime = systemClock;
+
+                    // removing process from queues
+                    if (readyQueue.front == currentProcess)
+                    {
+                        readyQueue.front = currentProcess->next;
+                    }
+                    else if (readyQueue.rear == currentProcess)
+                    {
+                        readyQueue.rear = currentProcess->previous;
+                    }
+                    else if (waitingQueue.front == currentProcess)
+                    {
+                        waitingQueue.front = currentProcess->next;
+                    }
+                    else if (waitingQueue.rear == currentProcess)
+                    {
+                        waitingQueue.rear = currentProcess->previous;
+                    }
+                    else
+                    {
+                        currentProcess->previous->next = currentProcess->next;
+                        currentProcess->next->previous = currentProcess->previous;
+                    }
+                    currentProcess->next = NULL;
+                    currentProcess->previous = NULL;
+                    currentProcess->processState = TERMINATED;
+
+                    // entering process in terminated queue
+                    if (terminatedQueue.rear == NULL)
+                    {
+                        terminatedQueue.rear = currentProcess;
+                        terminatedQueue.front = currentProcess;
+                    }
+                    else
+                    {
+                        terminatedQueue.rear->next = currentProcess;
+                        currentProcess->previous = terminatedQueue.rear;
+                        terminatedQueue.rear = currentProcess;
+                    }
+                    break;
+                }
+                currentNode = currentNode->next;
+            }
+        }
+
+        // removing process from kill list
+        if (temp->previous)
+        {
+            temp->previous->next = temp->next;
+        }
+        if (temp->next)
+        {
+            temp->next->previous = temp->previous;
+        }
+
+        temp = temp->next;
+        free(temp->previous);
     }
 }
