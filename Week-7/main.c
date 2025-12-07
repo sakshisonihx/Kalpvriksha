@@ -323,15 +323,15 @@ void printOutput()
         temp = temp->next;
     }
 
-    for (int a = 0; a < count - 1; a++)
+    for (int first = 0; first < count - 1; first++)
     {
-        for (int b = a + 1; b < count; b++)
+        for (int second = first + 1; second < count; second++)
         {
-            if (arr[a]->processID > arr[b]->processID)
+            if (arr[first]->processID > arr[second]->processID)
             {
-                ProcessDetails *swap = arr[a];
-                arr[a] = arr[b];
-                arr[b] = swap;
+                ProcessDetails *swap = arr[first];
+                arr[first] = arr[second];
+                arr[second] = swap;
             }
         }
     }
@@ -343,30 +343,30 @@ void printOutput()
         printf("\n| %-6s | %-15s | %-6s | %-6s | %-15s | %-15s |",
                "PID", "Name", "CPU", "IO", "Turnaround", "Waiting");
 
-    for (int x = 0; x < count; x++)
+    for (int inx = 0; inx < count; inx++)
     {
-        ProcessDetails *p = arr[x];
+        ProcessDetails *currentProcess = arr[inx];
 
         if (anyKilled)
         {
-            if (p->killTime != -1)
+            if (currentProcess->killTime != -1)
             {
                 printf("\n| %-6d | %-15s | %-6d | %-6d | %-9s %-2d | %-15s | %-15s |",
-                       p->processID, p->processName, p->burstTime, p->ioDuration,
-                       "KILLED at", p->killTime, "-", "-");
+                       currentProcess->processID, currentProcess->processName, currentProcess->burstTime, currentProcess->ioDuration,
+                       "KILLED at", currentProcess->killTime, "-", "-");
             }
             else
             {
                 printf("\n| %-6d | %-15s | %-6d | %-6d | %-12s | %-15d | %-15d |",
-                       p->processID, p->processName, p->burstTime, p->ioDuration,
-                       "OK", p->turnAroundTime, p->waitingTime);
+                       currentProcess->processID, currentProcess->processName, currentProcess->burstTime, currentProcess->ioDuration,
+                       "OK", currentProcess->turnAroundTime, currentProcess->waitingTime);
             }
         }
         else
         {
             printf("\n| %-6d | %-15s | %-6d | %-6d | %-15d | %-15d |",
-                   p->processID, p->processName, p->burstTime,
-                   p->ioDuration, p->turnAroundTime, p->waitingTime);
+                   currentProcess->processID, currentProcess->processName, currentProcess->burstTime,
+                   currentProcess->ioDuration, currentProcess->turnAroundTime, currentProcess->waitingTime);
         }
     }
     free(arr);
