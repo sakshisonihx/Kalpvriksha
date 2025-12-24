@@ -1,3 +1,5 @@
+// run server.exe on one terminal and client.exe on another terminal to simulate the program.
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -59,7 +61,7 @@ void *handleClient(void *argument)
     if (newBalance != -1)
     {
         filePointer = fopen("../resources/accountDB.txt", "w");
-        fprintf(filePointer, "%d", balance);
+        fprintf(filePointer, "%d", newBalance);
         fclose(filePointer);
     }
 
