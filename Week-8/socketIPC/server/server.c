@@ -21,7 +21,7 @@ void *handleClient(void *argument)
     }
 
     pthread_mutex_lock(&mutexLock);
-    filePointer = fopen("../resource/accountDB.txt", "r");
+    filePointer = fopen("../resources/accountDB.txt", "r");
     fscanf(filePointer, "%d", &balance);
     fclose(filePointer);
     int newBalance = balance;
@@ -58,7 +58,7 @@ void *handleClient(void *argument)
 
     if (newBalance != -1)
     {
-        filePointer = fopen("../resource/accountDB.txt", "w");
+        filePointer = fopen("../resources/accountDB.txt", "w");
         fprintf(filePointer, "%d", balance);
         fclose(filePointer);
     }
@@ -72,7 +72,7 @@ void *handleClient(void *argument)
 
 int main()
 {
-    int serverFD, clientFD;
+    int serverFD;
     struct sockaddr_in adder;
     pthread_mutex_init(&mutexLock, NULL);
 
@@ -84,11 +84,17 @@ int main()
     bind(serverFD, (struct sockaddr *)&adder, sizeof(adder));
     listen(serverFD, 5);
 
+    printf("ATM Server running on port 8080...\n");
+
     while (1)
     {
-        int *newSock = malloc(sizeof(int));
-        *newSock = accept(server_fd, NULL, NULL);
+        int *clientSocket = malloc(sizeof(int));
+        *clientSocket = accept(serverFD, NULL, NULL);
         pthread_t thread;
-        pthread_create(&thread, NULL, handle_client, newSock);
+        pthread_create(&thread, NULL, handleClient, clientSocket);
+        pthread_detach(thread);
     }
+    close(serverFD);
+    pthread_mutex_destroy(&mutexLock);
+    return 0;
 }
