@@ -11,9 +11,9 @@ void sort(int array[], int size)
         for (int second = 0; second < size - first - 1; second++)
             if (array[second] > array[second + 1])
             {
-                int t = array[second];
+                int temp = array[second];
                 array[second] = array[second + 1];
-                array[second + 1] = t;
+                array[second + 1] = temp;
             }
 }
 
